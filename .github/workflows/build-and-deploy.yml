@@ -1,0 +1,92 @@
+name: Laravel CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    
+    # Layanan yang dibutuhkan untuk menjalankan PHPUnit
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: true
+          MYSQL_DATABASE: testing
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 1: Setup PHP Environment
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3' # Pilih versi PHP yang Anda gunakan
+          extensions: mbstring, pdo_mysql, dom, filter, gd
+          coverage: none # Opsional: 'xdebug' atau 'pcov' jika Anda mengukur coverage
+
+      # Step 2: Install Composer Dependencies
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      # Step 3: Setup Node.js and Install NPM Dependencies
+      - name: Setup Node.js and Install NPM
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' 
+      - name: Install NPM and Build Assets (Vite)
+        # Gunakan 'npm install' untuk menginstal dependencies frontend dan 'npm run build' untuk kompilasi aset (misal: CSS/JS)
+        run: |
+          npm install
+          npm run build
+
+      # Step 4: Run Tests (PHPUnit)
+      - name: Setup Laravel Environment (.env)
+        # Kunci aplikasi diperlukan untuk menjalankan testing
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          # Konfigurasi database untuk testing
+          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=mysql/' .env
+          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_PORT=3306/DB_PORT=3306/' .env
+          sed -i 's/DB_DATABASE=laravel/DB_DATABASE=testing/' .env
+          sed -i 's/DB_USERNAME=root/DB_USERNAME=root/' .env
+          sed -i 's/DB_PASSWORD=/DB_PASSWORD=/' .env
+
+      - name: Run Laravel Migrations
+        run: php artisan migrate --env=testing --force
+
+      - name: Run Pest Tests
+        run: ./vendor/bin/pest 
+
+  # CD - Continuous Deployment Job
+  # Job ini sekarang hanya akan berjalan jika Anda menggunakan action deployment (misal: Deployer, Laravel Envoy, atau langsung ke cloud)
+  deploy:
+    name: Deploy to Production
+    needs: build-test
+    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+            fetch-depth: 1 
+      
+      - name: Mock Deployment Step
+        run: |
+          echo "--- Starting Deployment (Example) ---"
+          # Ganti baris di bawah ini dengan perintah deployment Anda yang sebenarnya
+          echo "Deploying using SSH or a specific deployment tool (e.g., rsync, Deployer, Envoyer)."
+          echo "Deployment successful for commit ${{ github.sha }} to production."
