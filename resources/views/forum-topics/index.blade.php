@@ -28,6 +28,11 @@
                                         </div>
                                         <div class="text-sm text-gray-600">
                                             By <a href="#" class="text-blue-500 hover:underline">{{ $topic->user->name }}</a>
+                                            @if ($topic->user->role === 'admin')
+                                                <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    Admin
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="ml-4 text-sm text-gray-500 text-center">

@@ -6,8 +6,8 @@
                 <!-- Logo -->
                 <div class="shrink-5 flex items-center">
                      <a href="{{ route('dashboard') }}">
-                      <img src="{{ asset('assets/logo.png') }}" alt="Logo Web" class="block h-9 w-auto fill-current text-gray-800">
-                </a>
+                        <img src="{{ asset('assets/logo.png') }}" alt="Logo Web" class="block h-10 w-auto">
+                    </a>
                 </div>
                 
                 <!-- Navigation Links -->
@@ -21,11 +21,9 @@
                     <x-nav-link :href="route('forum-topics.index')" :active="request()->routeIs('forum-topics.index')">
                         {{ __('Forum') }}
                     </x-nav-link>
-                    @if(Auth::user()->role === 'admin')
-                        <x-nav-link :href="route('news.index')" :active="request()->routeIs('news.index')">
-                            {{ __('News') }}
-                        </x-nav-link>
-                    @endif
+                    <x-nav-link :href="route('news.index')" :active="request()->routeIs('news.index')">
+                        {{ __('News') }}
+                    </x-nav-link>
                     @if(Auth::user()->role === 'admin')
                         <x-nav-link :href="route('admin.index')" :active="request()->routeIs('admin.index')">
                             {{ __('Admin') }}
@@ -92,11 +90,9 @@
             <x-responsive-nav-link :href="route('forum-topics.index')" :active="request()->routeIs('forum-topics.index')">
                 {{ __('Forum') }}
             </x-responsive-nav-link>
-            @if(Auth::user()->role === 'admin')
             <x-responsive-nav-link :href="route('news.index')" :active="request()->routeIs('news.index')">
                 {{ __('News') }}
             </x-responsive-nav-link>
-            @endif
             @if(Auth::user()->role === 'admin')
                 <x-responsive-nav-link :href="route('admin.index')" :active="request()->routeIs('admin.index')">
                     {{ __('Admin') }}

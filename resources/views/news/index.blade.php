@@ -18,8 +18,14 @@
                         @foreach ($news as $news_item)
                             <div class="p-4 border rounded-lg shadow-sm">
                                 <div class="flex items-start">
-                                    <img src="https://i.pravatar.cc/50?u={{ $news_item->user->email }}" alt="avatar" class="rounded-full mr-4">
+                                    <img src="https://i.pravatar.cc/50?u={{ $news_item->admin->email }}" alt="avatar" class="rounded-full mr-4">
                                     <div class="flex-1">
+                                        <div class="text-sm text-gray-600">
+                                            By <a href="#" class="text-blue-500 hover:underline">{{ $news_item->admin->name }}</a>
+                                            <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                Admin
+                                            </span>
+                                        </div>
                                         <div class="flex justify-between items-center">
                                             <h3 class="text-lg font-semibold">
                                                 <a href="{{ route('news.show', $news_item) }}" class="text-blue-500 hover:underline">{{ $news_item->title }}</a>
@@ -27,9 +33,6 @@
                                             <div class="text-sm text-gray-500">
                                                 {{ $news_item->created_at->diffForHumans() }}
                                             </div>
-                                        </div>
-                                        <div class="text-sm text-gray-600">
-                                            By <a href="#" class="text-blue-500 hover:underline">{{ $news_item->user->name }}</a>
                                         </div>
                                     </div>
                                 </div>

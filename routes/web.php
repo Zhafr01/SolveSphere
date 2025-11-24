@@ -21,8 +21,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('reports', ReportController::class);
     Route::resource('forum-topics', ForumTopicController::class);
     Route::resource('forum-topics.comments', ForumCommentController::class)->shallow();
-    Route::resource('news', NewsController::class)->except(['create', 'store']);
-    Route::resource('news', NewsController::class)->only(['create', 'store'])->middleware('role:admin');
+    Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+    Route::get('/news/create', [NewsController::class, 'create'])->name('news.create')->middleware('role:admin');
+    Route::post('/news', [NewsController::class, 'store'])->name('news.store')->middleware('role:admin');
+    Route::get('/news/{news}', [NewsController::class, 'show'])->name('news.show');
+    Route::get('/news/{news}/edit', [NewsController::class, 'edit'])->name('news.edit')->middleware('role:admin');
+    Route::put('/news/{news}', [NewsController::class, 'update'])->name('news.update')->middleware('role:admin');
+    Route::delete('/news/{news}', [NewsController::class, 'destroy'])->name('news.destroy')->middleware('role:admin');
     Route::get('/admin', [App\Http\Controllers\Admin\AdminController::class, 'index'])->name('admin.index')->middleware('role:admin');
 });
 

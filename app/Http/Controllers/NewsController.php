@@ -36,9 +36,10 @@ class NewsController extends Controller
         ]);
 
         $news = new News();
-        $news->user_id = Auth::id();
+        $news->admin_id = Auth::id();
         $news->title = $request->title;
         $news->content = $request->content;
+        $news->published_at = now();
         $news->save();
 
         return redirect()->route('news.index')->with('success', 'News created successfully.');

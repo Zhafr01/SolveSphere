@@ -12,8 +12,14 @@
                     <div class="flex items-start">
                         <img src="https://i.pravatar.cc/50?u={{ $forumTopic->user->email }}" alt="avatar" class="rounded-full mr-4">
                         <div class="flex-1">
-                            <p>{{ $forumTopic->content }}</p>
-                            <p class="text-sm text-gray-500">By <a href="#" class="text-blue-500 hover:underline">{{ $forumTopic->user->name }}</a> on {{ $forumTopic->created_at->format('M d, Y') }}</p>
+                            <p class="mt-2">{{ $forumTopic->content }}</p>
+                            <p class="text-sm text-gray-500">By <a href="#" class="text-blue-500 hover:underline">{{ $forumTopic->user->name }}</a>
+                                @if ($forumTopic->user->role === 'admin')
+                                    <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        Admin
+                                    </span>
+                                @endif
+                                on {{ $forumTopic->created_at->format('M d, Y') }}</p>
                         </div>
                     </div>
                 </div>
@@ -27,9 +33,14 @@
                             <div class="flex items-start">
                                 <img src="https://i.pravatar.cc/50?u={{ $comment->user->email }}" alt="avatar" class="rounded-full mr-4">
                                 <div class="flex-1">
-                                    <p>{{ $comment->content }}</p>
-                                    <p class="text-sm text-gray-500">By <a href="#" class="text-blue-500 hover:underline">{{ $comment->user->name }}</a> on {{ $comment->created_at->format('M d, Y') }}</p>
-                                </div>
+                                    <p class="mt-2">{{ $comment->content }}</p>
+                                     <p class="text-sm text-gray-500">By <a href="#" class="text-blue-500 hover:underline">{{ $comment->user->name }}</a>
+                                        @if ($comment->user->role === 'admin')
+                                            <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                Admin
+                                            </span>
+                                        @endif
+                                        on {{ $comment->created_at->format('M d, Y') }}</p>
                             </div>
                         </div>
                     </div>

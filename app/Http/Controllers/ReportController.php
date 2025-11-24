@@ -49,9 +49,9 @@ class ReportController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Report $report)
     {
-        //
+        return view('reports.show', compact('report'));
     }
 
     /**
@@ -65,9 +65,18 @@ class ReportController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Report $report)
     {
-        //
+        $request->validate([
+            'status' => 'required|in:pending,in_progress,resolved',
+            'admin_note' => 'nullable|string',
+        ]);
+
+        $report->status = $request->status;
+        $report->admin_note = $request->admin_note;
+        $report->save();
+
+        return redirect()->route('reports.index')->with('success', 'Report updated successfully.');
     }
 
     /**
