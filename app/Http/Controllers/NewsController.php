@@ -50,13 +50,8 @@ class NewsController extends Controller
             }
         } else {
             // Main Web: Filter by partner_id = null (Global News)
-            // Unless user is Super Admin
-            if (!Auth::user()->isSuperAdmin()) {
-                $query->withoutGlobalScope(\App\Scopes\PartnerScope::class)
-                      ->whereNull('partner_id');
-            } else {
-                $query->withoutGlobalScope(\App\Scopes\PartnerScope::class);
-            }
+            $query->withoutGlobalScope(\App\Scopes\PartnerScope::class)
+                  ->whereNull('partner_id');
         }
 
         $news = $query->with('admin')->latest()->paginate(10);
@@ -95,9 +90,17 @@ class NewsController extends Controller
         $news->content = $request->content;
         $news->admin_id = $user->id;
         
-        // Super admin can assign to a partner or make it global
-        // Partner admin can only assign to their own partner
-        $news->partner_id = $user->isSuperAdmin() ? $request->partner_id : $user->partner_id;
+        // Super Admin can ONLY create Global News
+        if ($user->isSuperAdmin()) {
+            if ($request->filled('partner_id')) {
+                return response()->json(['message' => 'Super Admins cannot create news for specific partners.'], 403);
+            }
+            $news->partner_id = null;
+        } 
+        // Partner Admin can ONLY create news for their partner
+        else {
+            $news->partner_id = $user->partner_id;
+        }
 
 
         if ($request->hasFile('image')) {

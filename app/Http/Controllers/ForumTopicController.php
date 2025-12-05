@@ -27,13 +27,8 @@ class ForumTopicController extends Controller
             }
         } else {
             // Main Web: Filter by partner_id = null (Global Topics)
-            // Unless user is Super Admin
-            if (!Auth::user()->isSuperAdmin()) {
-                $query->withoutGlobalScope(\App\Scopes\PartnerScope::class)
-                      ->whereNull('partner_id');
-            } else {
-                $query->withoutGlobalScope(\App\Scopes\PartnerScope::class);
-            }
+            $query->withoutGlobalScope(\App\Scopes\PartnerScope::class)
+                  ->whereNull('partner_id');
         }
 
         if ($request->filled('search')) {
@@ -70,9 +65,9 @@ class ForumTopicController extends Controller
             return response()->json(['message' => 'You can only create topics for your own organization.'], 403);
         }
 
-        // Super admins can create topics for any partner or globally
-        // Regular users can only create global topics (partner_id will be null)
-        $partnerId = $user->isSuperAdmin() ? $request->partner_id : $user->partner_id;
+        // Super admins and Global Users can create topics for any partner or globally
+        // Partner Users can only create topics for their own partner (enforced by check above)
+        $partnerId = ($user->isSuperAdmin() || !$user->partner_id) ? $request->partner_id : $user->partner_id;
 
         $topic = ForumTopic::create([
             'user_id' => $user->id,
@@ -91,7 +86,12 @@ class ForumTopicController extends Controller
     public function show(ForumTopic $forumTopic)
     {
         // PartnerScope handles tenancy.
-        $forumTopic->load(['user', 'comments.user', 'comments.likes']);
+        $forumTopic->load(['user', 'comments' => function ($query) {
+            $query->with(['user', 'likes'])->withCount('likes');
+        }]);
+        
+        $forumTopic->is_liked_by_user = $forumTopic->likes()->where('user_id', Auth::id())->exists();
+        $forumTopic->likes_count = $forumTopic->likes()->count();
         
         if (request()->wantsJson() && !request()->inertia()) {
             return response()->json($forumTopic);

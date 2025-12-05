@@ -55,6 +55,10 @@ class AppServiceProvider extends ServiceProvider
             if ($user->isPartnerAdmin() && $user->partner_id === $report->partner_id) {
                 return true;
             }
+            // Allow users to view reports if they belong to the same partner (or both are global)
+            if ($user->partner_id === $report->partner_id) {
+                return true;
+            }
             return $user->id === $report->user_id;
         });
 

@@ -73,16 +73,24 @@ const CommentItem = ({ comment, onReply, onLike, onDelete, onEdit, user, depth =
                 )}
 
                 <div className="flex items-center gap-4">
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.9 }}
                         onClick={() => onLike(comment.id)}
-                        className={`flex items-center gap-1 text-sm ${isLiked ? 'text-indigo-600 dark:text-indigo-400 font-medium' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}`}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${isLiked ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium' : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600'}`}
                     >
-                        <ThumbsUp className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-                        {comment.likes_count || 0} Likes
-                    </button>
+                        <motion.div
+                            initial={false}
+                            animate={isLiked ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <ThumbsUp className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
+                        </motion.div>
+                        <span>{comment.likes_count || 0}</span>
+                    </motion.button>
+
                     <button
                         onClick={() => setIsReplying(!isReplying)}
-                        className="flex items-center gap-1 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
                     >
                         <Reply className="h-4 w-4" /> Reply
                     </button>
@@ -136,6 +144,8 @@ export default function ForumDetail() {
     const [loading, setLoading] = useState(true);
     const [newComment, setNewComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState({ title: '', content: '' });
 
     useEffect(() => {
         fetchTopic();
@@ -170,7 +180,13 @@ export default function ForumDetail() {
                 }
             });
 
+            // Sort root comments by likes (descending)
+            rootComments.sort((a, b) => (b.likes_count || 0) - (a.likes_count || 0));
+
+
+
             setTopic({ ...data, comments: rootComments });
+            setEditForm({ title: data.title, content: data.content });
         } catch (error) {
             console.error("Failed to fetch topic", error);
             if (error.response) {
@@ -258,6 +274,19 @@ export default function ForumDetail() {
         } catch (error) {
             console.error("Failed to delete topic", error);
         }
+    }
+
+
+    const handleUpdateTopic = async () => {
+        try {
+            const { data } = await api.put(`/forum-topics/${id}`, editForm);
+            setTopic(prev => ({ ...prev, title: data.topic.title, content: data.topic.content }));
+            setIsEditing(false);
+            alert("Topic updated successfully");
+        } catch (error) {
+            console.error("Failed to update topic", error);
+            alert("Failed to update topic");
+        }
     };
 
     if (loading) return <div>Loading topic...</div>;
@@ -271,9 +300,7 @@ export default function ForumDetail() {
             animate={{ opacity: 1, y: 0 }}
             className="max-w-4xl mx-auto space-y-6"
         >
-            <Link to="/forum" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center gap-2 mb-4">
-                <ArrowLeft className="h-4 w-4" /> Back to Forum
-            </Link>
+
 
             {/* Topic Header */}
             <motion.div
@@ -282,12 +309,27 @@ export default function ForumDetail() {
                 className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300"
             >
                 <div className="flex justify-between items-start mb-4">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{topic.title}</h1>
-                    {canModifyTopic && (
-                        <button onClick={handleDeleteTopic} className="text-gray-400 hover:text-red-600 p-1">
-                            <Trash2 className="h-5 w-5" />
-                        </button>
+                    {isEditing ? (
+                        <input
+                            type="text"
+                            value={editForm.title}
+                            onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                            className="text-2xl font-bold text-gray-900 dark:text-white bg-transparent border-b border-gray-300 dark:border-slate-600 focus:outline-none focus:border-indigo-500 w-full mr-4"
+                        />
+                    ) : (
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{topic.title}</h1>
                     )}
+                    {canModifyTopic && !isEditing && (
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setIsEditing(true)} className="text-gray-400 hover:text-indigo-600 p-1">
+                                <Edit2 className="h-5 w-5" />
+                            </button>
+                            <button onClick={handleDeleteTopic} className="text-gray-400 hover:text-red-600 p-1">
+                                <Trash2 className="h-5 w-5" />
+                            </button>
+                        </div>
+                    )}
+
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400 mb-6">
                     <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center text-gray-600 dark:text-slate-300 font-bold">
@@ -298,18 +340,41 @@ export default function ForumDetail() {
                     <span>{new Date(topic.created_at).toLocaleDateString()}</span>
                 </div>
                 <div className="prose max-w-none text-gray-800 dark:text-slate-300 dark:prose-invert">
-                    <p className="whitespace-pre-wrap">{topic.content}</p>
+                    {isEditing ? (
+                        <textarea
+                            value={editForm.content}
+                            onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
+                            rows="8"
+                            className="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                    ) : (
+                        <p className="whitespace-pre-wrap">{topic.content}</p>
+                    )}
                 </div>
-                <div className="mt-6 flex items-center gap-4">
-                    <button
-                        onClick={handleLikeTopic}
-                        className={`flex items-center gap-1 text-sm ${topic.is_liked_by_user ? 'text-indigo-600 dark:text-indigo-400 font-medium' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}`}
+                {isEditing && (
+                    <div className="mt-4 flex justify-end gap-2">
+                        <button onClick={() => setIsEditing(false)} className="px-4 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
+                        <button onClick={handleUpdateTopic} className="px-4 py-2 rounded-lg text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm">Save Changes</button>
+                    </div>
+                )}
+            </motion.div>
+
+            <div className="flex items-center gap-4 px-2">
+                <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleLikeTopic}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${topic.is_liked_by_user ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 shadow-sm'}`}
+                >
+                    <motion.div
+                        initial={false}
+                        animate={topic.is_liked_by_user ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+                        transition={{ duration: 0.2 }}
                     >
                         <ThumbsUp className={`h-5 w-5 ${topic.is_liked_by_user ? 'fill-current' : ''}`} />
-                        {topic.likes_count || 0} Likes
-                    </button>
-                </div>
-            </motion.div>
+                    </motion.div>
+                    <span>{topic.likes_count || 0} Likes</span>
+                </motion.button>
+            </div>
 
             {/* Comments Section */}
             <div className="space-y-4">

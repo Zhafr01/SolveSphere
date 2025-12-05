@@ -92,9 +92,6 @@ class DashboardController extends Controller
             
             // Overwrite the scoped stats with global stats for super admin
             $stats['total_users'] = $total_users;
-            $stats['total_reports'] = Report::withoutGlobalScope(\App\Scopes\PartnerScope::class)->count();
-            $stats['total_topics'] = ForumTopic::withoutGlobalScope(\App\Scopes\PartnerScope::class)->count();
-            $stats['total_news'] = News::withoutGlobalScope(\App\Scopes\PartnerScope::class)->count();
             $stats['total_partners'] = $total_partners;
             $stats['pending_partners'] = $pending_partners;
 

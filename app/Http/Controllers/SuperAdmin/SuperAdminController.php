@@ -290,6 +290,16 @@ class SuperAdminController extends Controller
             'end_date' => now()->addMonth(),
         ]);
 
+        // Send welcome message from Super Admin to Partner Admin
+        if ($partner->user_id) {
+            \App\Models\Message::create([
+                'sender_id' => \Illuminate\Support\Facades\Auth::id(),
+                'receiver_id' => $partner->user_id,
+                'message' => "Congratulations! Your partner application for {$partner->name} has been approved. Welcome to SolveSphere!",
+                'is_read' => false,
+            ]);
+        }
+
         // Notify user (optional, but good practice)
         // $user->notify(new PartnerApplicationAccepted($partner));
 
@@ -336,6 +346,42 @@ class SuperAdminController extends Controller
         }
 
         return redirect()->back()->with('success', 'Partner application rejected successfully');
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/super-admin/partners/{id}/suspend",
+     *     summary="Suspend a partner",
+     *     tags={"Super Admin"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Partner suspended successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="partner", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function suspend(Partner $partner)
+    {
+        $partner->update(['status' => 'inactive']);
+
+        if (request()->wantsJson() && !request()->inertia()) {
+            return response()->json([
+                'message' => 'Partner suspended successfully',
+                'partner' => $partner
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Partner suspended successfully');
     }
 
     /**

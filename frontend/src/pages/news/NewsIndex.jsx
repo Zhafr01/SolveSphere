@@ -113,7 +113,7 @@ export default function NewsIndex() {
                             <Search className="h-5 w-5" />
                         </div>
                     </motion.div>
-                    {['super_admin', 'partner_admin'].includes(user?.role) && (
+                    {((user?.role === 'super_admin' && !slug) || (user?.role === 'partner_admin' && slug)) && (
                         <Link to="/news/create" className="btn-primary flex items-center gap-2 whitespace-nowrap">
                             <Plus className="h-4 w-4" />
                             Post News

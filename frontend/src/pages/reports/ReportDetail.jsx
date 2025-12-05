@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Calendar, Tag } from 'lucide-react';
 
 export default function ReportDetail() {
     const { id } = useParams();
@@ -12,6 +12,8 @@ export default function ReportDetail() {
     const [loading, setLoading] = useState(true);
     const [adminNote, setAdminNote] = useState('');
     const [saving, setSaving] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState({ title: '', content: '' });
 
     useEffect(() => {
         const fetchReport = async () => {
@@ -19,6 +21,7 @@ export default function ReportDetail() {
                 const { data } = await api.get(`/reports/${id}`);
                 setReport(data);
                 setAdminNote(data.admin_note || '');
+                setEditForm({ title: data.title, content: data.description || data.content });
             } catch (error) {
                 console.error("Failed to fetch report", error);
             } finally {
@@ -46,44 +49,117 @@ export default function ReportDetail() {
         }
     };
 
+    const handleUpdate = async () => {
+        setSaving(true);
+        try {
+            const { data } = await api.put(`/reports/${id}`, {
+                ...editForm,
+                status: report.status // maintain status
+            });
+            setReport(data.report || data); // API might return wrapped or direct
+            setIsEditing(false);
+            alert("Report updated successfully");
+        } catch (error) {
+            console.error("Failed to update report", error);
+            alert("Failed to update report");
+        } finally {
+            setSaving(false);
+        }
+    };
+
     if (loading) return <div>Loading report...</div>;
     if (!report) return <div>Report not found.</div>;
 
     return (
         <div className="max-w-3xl mx-auto bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300">
-            <button onClick={() => navigate('/reports')} className="mb-4 text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" /> Back to Reports
-            </button>
+
 
             <div className="flex justify-between items-start mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{report.title}</h1>
-                    <div className="flex items-center gap-2 mt-2 text-sm text-gray-500 dark:text-slate-400">
-                        <span>{new Date(report.created_at).toLocaleDateString()}</span>
-                        <span>•</span>
-                        <span>{report.category}</span>
+                <div className="w-full">
+                    <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-3 flex-wrap">
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        value={editForm.title}
+                                        onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                                        className="text-2xl font-bold text-gray-800 dark:text-white bg-transparent border-b border-gray-300 dark:border-slate-600 focus:outline-none focus:border-indigo-500 min-w-[200px]"
+                                    />
+                                ) : (
+                                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{report.title}</h1>
+                                )}
+
+                                <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full border 
+                                    ${report.status === 'resolved' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' :
+                                        report.status === 'in_progress' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' :
+                                            'bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-slate-400 border-gray-200 dark:border-slate-700'}`}>
+                                    {report.status.replace('_', ' ')}
+                                </span>
+                                <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full border
+                                    ${report.urgency === 'Critical' ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' :
+                                        report.urgency === 'High' ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800' :
+                                            report.urgency === 'Medium' ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800' :
+                                                'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800'}`}>
+                                    {report.urgency} Priority
+                                </span>
+                            </div>
+                        </div>
+
+                        {user?.id === report.user_id && !isEditing && (
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="shrink-0 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Edit Report
+                            </button>
+                        )}
                     </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full 
-                        ${report.urgency === 'Critical' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
-                            report.urgency === 'High' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300' :
-                                report.urgency === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
-                                    'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'}`}>
-                        {report.urgency}
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full 
-                        ${report.status === 'resolved' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-                            report.status === 'in_progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' :
-                                'bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-slate-300'}`}>
-                        {report.status}
-                    </span>
                 </div>
             </div>
 
+            <hr className="my-6 border-gray-200 dark:border-slate-700" />
+
             <div className="prose max-w-none mb-6 dark:prose-invert">
                 <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Description</h3>
-                <p className="text-gray-700 dark:text-slate-300 whitespace-pre-wrap">{report.description || report.content}</p>
+                {isEditing ? (
+                    <>
+                        <textarea
+                            value={editForm.content}
+                            onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
+                            rows="6"
+                            className="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                        <div className="mt-4 flex justify-end gap-2">
+                            <button
+                                onClick={() => setIsEditing(false)}
+                                className="px-4 py-2 rounded-lg text-sm text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleUpdate}
+                                disabled={saving}
+                                className="px-4 py-2 rounded-lg text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm"
+                            >
+                                {saving ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <p className="text-gray-700 dark:text-slate-300 whitespace-pre-wrap">{report.description || report.content}</p>
+                )}
+            </div>
+
+            <div className="flex items-center gap-6 pt-6 border-t border-gray-100 dark:border-slate-700/50 text-sm text-gray-500 dark:text-slate-400">
+                <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>{new Date(report.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    <span>{report.category}</span>
+                </div>
             </div>
 
             {/* Admin Note Section */}

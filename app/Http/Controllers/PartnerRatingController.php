@@ -38,4 +38,21 @@ class PartnerRatingController extends Controller
 
         return response()->json(['message' => 'Rating submitted successfully']);
     }
+    public function index(string $slug)
+    {
+        $partner = Partner::where('slug', $slug)->firstOrFail();
+        $user = Auth::user();
+
+        // Authorization: Only Super Admin or the Partner Admin for this partner can view ratings
+        if (!$user->isSuperAdmin() && !($user->isPartnerAdmin() && $user->partner_id === $partner->id)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $ratings = PartnerRating::where('partner_id', $partner->id)
+            ->with('user:id,name,email,profile_picture')
+            ->latest()
+            ->paginate(20);
+
+        return response()->json($ratings);
+    }
 }

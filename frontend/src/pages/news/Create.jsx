@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { usePartner } from '../../context/PartnerContext';
 import { ArrowLeft, Upload } from 'lucide-react';
+import CustomSelect from '../../components/ui/CustomSelect';
 
 export default function NewsCreate() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const { user } = useAuth();
     const { currentPartner } = usePartner() || {};
+    const [partners, setPartners] = useState([]);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -18,6 +20,14 @@ export default function NewsCreate() {
         partner_id: currentPartner?.id || user?.partner_id || ''
     });
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (!currentPartner) {
+            api.get('/partners').then(res => {
+                setPartners(res.data.data || []);
+            }).catch(err => console.error(err));
+        }
+    }, [currentPartner]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -49,7 +59,7 @@ export default function NewsCreate() {
             await api.post('/news', data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            navigate('/news');
+            navigate(currentPartner ? `/partners/${currentPartner.slug}/news` : '/news');
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to create news.');
         } finally {
@@ -60,7 +70,7 @@ export default function NewsCreate() {
     return (
         <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 shadow-sm sm:rounded-lg p-6">
             <div className="flex items-center gap-4 mb-6">
-                <button onClick={() => navigate('/news')} className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200">
+                <button onClick={() => navigate(currentPartner ? `/partners/${currentPartner.slug}/news` : '/news')} className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200">
                     <ArrowLeft className="h-6 w-6" />
                 </button>
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Create News</h1>
@@ -73,7 +83,7 @@ export default function NewsCreate() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
+                <div className="relative z-60">
                     <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Title</label>
                     <input
                         type="text"
@@ -85,7 +95,31 @@ export default function NewsCreate() {
                     />
                 </div>
 
-                <div>
+                {currentPartner ? (
+                    <div className="relative z-50 mb-4">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Partner</label>
+                        <div className="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 cursor-not-allowed">
+                            {currentPartner.name}
+                        </div>
+                        <input type="hidden" name="partner_id" value={currentPartner.id} />
+                    </div>
+                ) : (
+                    <div className="relative z-50">
+                        <CustomSelect
+                            label="Partner (Optional)"
+                            value={formData.partner_id}
+                            onChange={(val) => setFormData({ ...formData, partner_id: val })}
+                            options={[
+                                { value: "", label: "-- Global News --" },
+                                ...partners.map(p => ({ value: p.id, label: p.name }))
+                            ]}
+                            placeholder="Select Partner"
+                        />
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Select a partner if this news is specific to one.</p>
+                    </div>
+                )}
+
+                <div className="relative z-40">
                     <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Content</label>
                     <textarea
                         name="content"
@@ -97,7 +131,7 @@ export default function NewsCreate() {
                     ></textarea>
                 </div>
 
-                <div>
+                <div className="relative z-30">
                     <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Cover Image</label>
                     <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-slate-700 border-dashed rounded-md hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors">
                         <div className="space-y-1 text-center">
@@ -117,7 +151,7 @@ export default function NewsCreate() {
                     </div>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end relative z-20">
                     <button
                         type="submit"
                         disabled={loading}

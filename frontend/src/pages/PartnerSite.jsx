@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function PartnerSite() {
     const { slug } = useParams();
+    const { user } = useAuth();
     const [partner, setPartner] = useState(null);
     const [news, setNews] = useState([]);
     const [topics, setTopics] = useState([]);
@@ -11,6 +13,13 @@ export default function PartnerSite() {
     const [stats, setStats] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // Rating State
+    const [rating, setRating] = useState(0);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [comment, setComment] = useState('');
+    const [submittingRating, setSubmittingRating] = useState(false);
+    const [userRating, setUserRating] = useState(null);
 
     useEffect(() => {
         const fetchPartnerData = async () => {
@@ -20,7 +29,9 @@ export default function PartnerSite() {
                 setNews(data.news);
                 setTopics(data.topics);
                 setReports(data.reports);
+                setReports(data.reports);
                 setStats(data.stats);
+                setUserRating(data.user_rating);
             } catch (err) {
                 console.error("Partner fetch error:", err);
                 setError(err.response?.data?.message || 'Partner not found or inactive');
@@ -31,6 +42,26 @@ export default function PartnerSite() {
 
         fetchPartnerData();
     }, [slug]);
+
+    const handleRateSubmit = async (e) => {
+        e.preventDefault();
+        if (rating === 0) return;
+
+        setSubmittingRating(true);
+        try {
+            await api.post(`/partners/${slug}/rate`, {
+                rating,
+                comment
+            });
+            setUserRating({ rating, comment });
+            alert('Rating submitted successfully!');
+        } catch (err) {
+            console.error("Rating error:", err);
+            alert(err.response?.data?.message || 'Failed to submit rating');
+        } finally {
+            setSubmittingRating(false);
+        }
+    };
 
     if (loading) return <div className="text-center mt-10">Loading...</div>;
     if (error) return <div className="text-center mt-10 text-red-600">{error}</div>;
@@ -74,6 +105,79 @@ export default function PartnerSite() {
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total_reports || 0}</h3>
                 </div>
             </div>
+
+            {/* Rating Section */}
+            {!(user?.role === 'partner_admin' && user?.partner_id === partner?.id) && (
+                <div className="bg-white dark:bg-slate-800 shadow sm:rounded-lg mb-8 p-6">
+                    <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Rate this Partner</h2>
+                    {userRating ? (
+                        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="flex">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <svg key={star} className={`w-5 h-5 ${star <= userRating.rating ? 'text-yellow-400 fill-current' : 'text-gray-300 dark:text-gray-600'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                        </svg>
+                                    ))}
+                                </div>
+                                <span className="font-semibold text-indigo-900 dark:text-indigo-300">Your Rating</span>
+                            </div>
+                            {userRating.comment && (
+                                <p className="text-gray-700 dark:text-gray-300 italic">"{userRating.comment}"</p>
+                            )}
+                            <button
+                                onClick={() => {
+                                    setRating(userRating.rating);
+                                    setComment(userRating.comment || '');
+                                    setUserRating(null);
+                                }}
+                                className="mt-3 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                            >
+                                Edit Rating
+                            </button>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleRateSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Rating</label>
+                                <div className="flex gap-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setRating(star)}
+                                            onMouseEnter={() => setHoverRating(star)}
+                                            onMouseLeave={() => setHoverRating(0)}
+                                            className="focus:outline-none transition-transform hover:scale-110"
+                                        >
+                                            <svg className={`w-8 h-8 ${star <= (hoverRating || rating) ? 'text-yellow-400 fill-current' : 'text-gray-300 dark:text-gray-600'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                            </svg>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Comment (Optional)</label>
+                                <textarea
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    rows="3"
+                                    className="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    placeholder="Share your experience..."
+                                ></textarea>
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={rating === 0 || submittingRating}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {submittingRating ? 'Submitting...' : 'Submit Rating'}
+                            </button>
+                        </form>
+                    )}
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* News Section */}

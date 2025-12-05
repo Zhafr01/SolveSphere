@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 import { Link, useParams } from 'react-router-dom';
-import { FileText, MessageSquare, Newspaper, Activity, ArrowRight, AlertTriangle, Users, User, ArrowUpRight } from 'lucide-react';
+import { FileText, MessageSquare, Newspaper, Activity, ArrowRight, AlertTriangle, Users, User, ArrowUpRight, Star } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { motion } from 'framer-motion';
 

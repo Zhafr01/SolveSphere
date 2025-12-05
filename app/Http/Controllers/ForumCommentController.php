@@ -196,7 +196,8 @@ class ForumCommentController extends Controller
 
         return response()->json([
             'message' => $message,
-            'liked' => $liked
+            'liked' => $liked,
+            'likes_count' => $comment->likes()->count(),
         ]);
     }
 }

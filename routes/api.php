@@ -30,7 +30,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/landing-page', [App\Http\Controllers\LandingPageController::class, 'index']);
 Route::get('/partners/{slug}', [App\Http\Controllers\PartnerSiteController::class, 'index']);
 Route::post('/partners/{slug}/register', [App\Http\Controllers\PartnerAuthController::class, 'store']);
-Route::post('/partners/{slug}/rate', [App\Http\Controllers\PartnerRatingController::class, 'store']);
+
 
 
 // Protected Routes
@@ -72,6 +72,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/chat', [ChatController::class, 'index']);
     Route::get('/chat/{otherUserId}', [ChatController::class, 'show']);
     Route::post('/chat/{otherUserId}', [ChatController::class, 'store']);
+    Route::put('/chat/messages/{id}', [ChatController::class, 'update']);
+    Route::delete('/chat/messages/{id}', [ChatController::class, 'destroy']);
 
     // Friends
     Route::get('/friends', [App\Http\Controllers\FriendController::class, 'index']);
@@ -82,6 +84,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Partner Application
     Route::post('/apply-partner', [PartnerApplicationController::class, 'store']);
+
+    // Partner Ratings
+    Route::post('/partners/{slug}/rate', [App\Http\Controllers\PartnerRatingController::class, 'store']);
+    Route::get('/partners/{slug}/ratings', [App\Http\Controllers\PartnerRatingController::class, 'index']);
 
 
     // Notifications
@@ -94,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('partners', SuperAdminController::class);
         Route::post('partners/{partner}/approve', [SuperAdminController::class, 'approve'])->name('partners.approve');
         Route::post('partners/{partner}/reject', [SuperAdminController::class, 'reject'])->name('partners.reject');
+        Route::post('partners/{partner}/suspend', [SuperAdminController::class, 'suspend'])->name('partners.suspend');
         Route::get('dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
 
         Route::post('partners/{partner}/subscription', [SuperAdminController::class, 'updateSubscription'])->name('partners.subscription.update');
@@ -112,5 +119,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::apiResource('partner-admins', PartnerAdminController::class);
         Route::get('users', [UserManagementController::class, 'index'])->name('users.index');
+        Route::post('users/{user}/suspend', [UserManagementController::class, 'suspend'])->name('users.suspend');
+        Route::post('users/{user}/activate', [UserManagementController::class, 'activate'])->name('users.activate');
+        Route::post('users/{user}/ban', [UserManagementController::class, 'ban'])->name('users.ban');
     });
 });

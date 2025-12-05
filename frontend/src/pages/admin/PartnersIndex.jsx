@@ -56,6 +56,17 @@ export default function PartnersIndex() {
         }
     };
 
+    const handleSuspend = async (id) => {
+        if (!confirm('Are you sure you want to suspend this partner? This will make their site inaccessible.')) return;
+        try {
+            await api.post(`/super-admin/partners/${id}/suspend`);
+            fetchPartners(); // Refresh list
+        } catch (error) {
+            console.error("Failed to suspend partner", error);
+            alert('Failed to suspend partner');
+        }
+    };
+
     const handleSubscriptionUpdate = async (partnerId, status) => {
         if (!confirm(`Are you sure you want to mark this subscription as ${status}?`)) return;
         try {
@@ -204,6 +215,12 @@ export default function PartnersIndex() {
                                                         Visit
                                                     </a>
                                                 )}
+                                                <button
+                                                    onClick={() => handleSuspend(partner.id)}
+                                                    className="text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300"
+                                                >
+                                                    Suspend
+                                                </button>
                                                 <button
                                                     onClick={() => handleDelete(partner.id)}
                                                     className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"

@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
-import { Send, Search, MoreVertical, MessageCircle, Image, X, Smile, CheckCheck } from 'lucide-react';
+import { usePartner } from '../../context/PartnerContext';
+import { Send, Search, MoreVertical, MessageCircle, Image, X, Smile, CheckCheck, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 
 export default function ChatIndex() {
     const { user } = useAuth();
+    const { currentPartner } = usePartner();
     const { id: userId } = useParams(); // Optional: open chat with specific user
     const navigate = useNavigate();
 
@@ -23,6 +25,8 @@ export default function ChatIndex() {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [highlightedMessageId, setHighlightedMessageId] = useState(null);
+    const [editingMessageId, setEditingMessageId] = useState(null);
+    const [showMessageOptions, setShowMessageOptions] = useState(null);
 
     const messagesEndRef = useRef(null);
     const pollInterval = useRef(null);
@@ -99,6 +103,8 @@ export default function ChatIndex() {
     useEffect(() => {
         setShouldScrollToBottom(true);
         isAtBottom.current = true;
+        setEditingMessageId(null);
+        setNewMessage('');
     }, [activeChat?.id]);
 
     useEffect(() => {
@@ -232,7 +238,9 @@ export default function ChatIndex() {
         setHighlightedMessageId(result.id);
         setSearchQuery(''); // Clear search query to show conversation list
         setSearchResults([]);
-        navigate(`/chat/${targetUser.id}`);
+
+        const basePath = currentPartner ? `/partners/${currentPartner.slug}/chat` : '/chat';
+        navigate(`${basePath}/${targetUser.id}`);
     };
 
     const handleImageSelect = (e) => {
@@ -266,44 +274,91 @@ export default function ChatIndex() {
 
         setSending(true);
         try {
-            const formData = new FormData();
-            if (newMessage.trim()) formData.append('message', newMessage);
-            if (selectedImage) formData.append('image', selectedImage);
+            if (editingMessageId) {
+                // Update existing message
+                const { data } = await api.put(`/chat/messages/${editingMessageId}`, {
+                    message: newMessage
+                });
 
-            const { data } = await api.post(`/chat/${activeChat.id}`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+                setMessages(prev => prev.map(msg =>
+                    msg.id === editingMessageId ? { ...msg, message: data.message } : msg
+                ));
+                setEditingMessageId(null);
+            } else {
+                // Send new message
+                const formData = new FormData();
+                if (newMessage.trim()) formData.append('message', newMessage);
+                if (selectedImage) formData.append('image', selectedImage);
 
-            setShouldScrollToBottom(true); // Force scroll to bottom when sending
-            setMessages([...messages, data.data]);
+                const { data } = await api.post(`/chat/${activeChat.id}`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+
+                setShouldScrollToBottom(true); // Force scroll to bottom when sending
+                setMessages([...messages, data.data]);
+
+                // Update conversation list with last message
+                setConversations(prev => {
+                    const updated = prev.map(c =>
+                        c.id === activeChat.id ? { ...c, last_message: data.data } : c
+                    );
+                    // Move active chat to top
+                    return updated.sort((a, b) => {
+                        if (a.id === activeChat.id) return -1;
+                        if (b.id === activeChat.id) return 1;
+                        return 0;
+                    });
+                });
+            }
+
             setNewMessage('');
             setSelectedImage(null);
             setPreviewUrl(null);
             setShowEmojiPicker(false);
 
-            // Update conversation list with last message
-            setConversations(prev => {
-                const updated = prev.map(c =>
-                    c.id === activeChat.id ? { ...c, last_message: data.data } : c
-                );
-                // Move active chat to top
-                return updated.sort((a, b) => {
-                    if (a.id === activeChat.id) return -1;
-                    if (b.id === activeChat.id) return 1;
-                    return 0;
-                });
-            });
         } catch (error) {
-            console.error("Failed to send message", error);
-            alert("Failed to send message");
+            console.error("Failed to send/update message", error);
+            alert("Failed to send/update message");
         } finally {
             setSending(false);
         }
     };
 
+    const handleDeleteMessage = async (messageId) => {
+        if (!confirm("Are you sure you want to delete this message?")) return;
+
+        try {
+            await api.delete(`/chat/messages/${messageId}`);
+            setMessages(prev => prev.filter(msg => msg.id !== messageId));
+            setShowMessageOptions(null);
+        } catch (error) {
+            console.error("Failed to delete message", error);
+            alert("Failed to delete message");
+        }
+    };
+
+    const handleEditClick = (msg) => {
+        setEditingMessageId(msg.id);
+        setNewMessage(msg.message);
+        setShowMessageOptions(null);
+        // Focus input
+        setTimeout(() => {
+            const input = document.querySelector('.input-field');
+            if (input) input.focus();
+        }, 100);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingMessageId(null);
+        setNewMessage('');
+        setSelectedImage(null);
+        setPreviewUrl(null);
+    };
+
     const handleSelectChat = (chatUser) => {
         setActiveChat(chatUser);
-        navigate(`/chat/${chatUser.id}`);
+        const basePath = currentPartner ? `/partners/${currentPartner.slug}/chat` : '/chat';
+        navigate(`${basePath}/${chatUser.id}`);
     };
 
     if (loading) return <div className="flex justify-center items-center h-[calc(100vh-100px)]">Loading chat...</div>;
@@ -318,7 +373,7 @@ export default function ChatIndex() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Search messages..."
+                            placeholder="Search messages or users..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-slate-800 border-transparent rounded-lg focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm text-slate-900 dark:text-white"
@@ -444,32 +499,52 @@ export default function ChatIndex() {
                             {messages.map((msg, index) => {
                                 const isMe = msg.sender_id === user.id;
                                 return (
-                                    <div key={msg.id || index} id={`message-${msg.id}`} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[75%] rounded-2xl px-4 py-2 shadow-sm ${isMe
-                                            ? 'bg-indigo-600 text-white rounded-br-none'
-                                            : 'bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-bl-none'
-                                            }`}>
-                                            {msg.attachment && (
-                                                <div className="mb-2">
-                                                    <img
-                                                        src={msg.attachment.startsWith('http') ? msg.attachment : `http://localhost:8000/storage/${msg.attachment}`}
-                                                        alt="Attachment"
-                                                        className="rounded-lg max-w-full h-auto max-h-64 object-cover"
-                                                    />
+                                    <div key={msg.id || index} id={`message-${msg.id}`} className={`flex ${isMe ? 'justify-end' : 'justify-start'} group mb-4`}>
+                                        <div className={`relative max-w-[75%] ${isMe ? 'mr-2' : 'ml-2'}`}>
+                                            {isMe && (
+                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-1/2 -translate-y-1/2 -left-24 flex gap-1 bg-white dark:bg-slate-800 p-1.5 rounded-full shadow-md border border-gray-100 dark:border-slate-700 z-10 w-max">
+                                                    <button
+                                                        onClick={() => handleEditClick(msg)}
+                                                        className="p-1.5 text-gray-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 rounded-full transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteMessage(msg.id)}
+                                                        className="p-1.5 text-gray-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 rounded-full transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
                                                 </div>
                                             )}
-                                            {msg.message && (
-                                                <p className={isSingleEmoji(msg.message) ? 'text-4xl leading-relaxed' : 'text-sm'}>
-                                                    {msg.message}
-                                                </p>
-                                            )}
-                                            <div className={`flex items-center justify-end gap-1 mt-1 ${isMe ? 'text-indigo-200' : 'text-gray-400 dark:text-slate-500'}`}>
-                                                <p className="text-[10px]">
-                                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </p>
-                                                {isMe && (
-                                                    <CheckCheck className={`h-4 w-4 ${msg.is_read ? 'text-blue-300' : 'text-indigo-300/70'}`} />
+                                            <div className={`rounded-2xl px-4 py-2 shadow-sm ${isMe
+                                                ? 'bg-indigo-600 text-white rounded-br-none'
+                                                : 'bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-bl-none'
+                                                }`}>
+                                                {msg.attachment && (
+                                                    <div className="mb-2">
+                                                        <img
+                                                            src={msg.attachment.startsWith('http') ? msg.attachment : `http://localhost:8000/storage/${msg.attachment}`}
+                                                            alt="Attachment"
+                                                            className="rounded-lg max-w-full h-auto max-h-64 object-cover"
+                                                        />
+                                                    </div>
                                                 )}
+                                                {msg.message && (
+                                                    <p className={isSingleEmoji(msg.message) ? 'text-4xl leading-relaxed' : 'text-sm'}>
+                                                        {msg.message}
+                                                    </p>
+                                                )}
+                                                <div className={`flex items-center justify-end gap-1 mt-1 ${isMe ? 'text-indigo-200' : 'text-gray-400 dark:text-slate-500'}`}>
+                                                    <p className="text-[10px]">
+                                                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </p>
+                                                    {isMe && (
+                                                        <CheckCheck className={`h-4 w-4 ${msg.is_read ? 'text-blue-300' : 'text-indigo-300/70'}`} />
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -480,6 +555,12 @@ export default function ChatIndex() {
 
                         {/* Input */}
                         <div className="p-4 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 relative">
+                            {editingMessageId && (
+                                <div className="absolute -top-10 left-0 right-0 bg-gray-100 dark:bg-slate-800 p-2 px-4 flex justify-between items-center text-sm text-gray-600 dark:text-slate-300">
+                                    <span>Editing message...</span>
+                                    <button onClick={handleCancelEdit} className="text-indigo-600 hover:underline">Cancel</button>
+                                </div>
+                            )}
                             {showEmojiPicker && (
                                 <div className="absolute bottom-20 left-4 z-10">
                                     <EmojiPicker onEmojiClick={handleEmojiClick} theme="auto" />
@@ -518,12 +599,13 @@ export default function ChatIndex() {
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
                                     className="p-3 text-gray-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors"
+                                    disabled={!!editingMessageId}
                                 >
-                                    <Image className="h-6 w-6" />
+                                    <Image className={`h-6 w-6 ${editingMessageId ? 'opacity-50 cursor-not-allowed' : ''}`} />
                                 </button>
                                 <input
                                     type="text"
-                                    placeholder="Type a message..."
+                                    placeholder={editingMessageId ? "Edit your message..." : "Type a message..."}
                                     className="flex-1 input-field"
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
@@ -534,7 +616,7 @@ export default function ChatIndex() {
                                     disabled={(!newMessage.trim() && !selectedImage) || sending}
                                     className="btn-primary p-3 rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <Send className="h-5 w-5" />
+                                    {editingMessageId ? <CheckCheck className="h-5 w-5" /> : <Send className="h-5 w-5" />}
                                 </button>
                             </form>
                         </div>

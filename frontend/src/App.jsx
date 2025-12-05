@@ -33,6 +33,7 @@ import NewsCreate from './pages/news/Create';
 import ChatIndex from './pages/chat/ChatIndex';
 import SocialIndex from './pages/SocialIndex';
 import SubscriptionIndex from './pages/Subscription/Index';
+import PartnerRatings from './pages/admin/PartnerRatings';
 import PartnerUsersIndex from './pages/admin/UsersIndex'; // Reusing UsersIndex or creating a new one?
 // Wait, UsersIndex is imported as UsersIndex on line 17 for Super Admin.
 // Partner Admin might need a different one or reuse it.
@@ -99,9 +100,44 @@ function App() {
                       <ForumIndex />
                     </ProtectedRoute>
                   } />
+                  <Route path="/partners/:slug/users" element={
+                    <ProtectedRoute roles={['partner_admin']}>
+                      <UsersIndex />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/partners/:slug/subscription" element={
+                    <ProtectedRoute roles={['partner_admin']}>
+                      <SubscriptionIndex />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/partners/:slug/ratings" element={
+                    <ProtectedRoute roles={['partner_admin', 'super_admin']}>
+                      <PartnerRatings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/partners/:slug/chat" element={
+                    <ProtectedRoute>
+                      <ChatIndex />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/partners/:slug/reports" element={
                     <ProtectedRoute>
                       <ReportsIndex />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/partners/:slug/reports/create" element={
+                    <ProtectedRoute>
+                      <CreateReport />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/partners/:slug/forum/create" element={
+                    <ProtectedRoute>
+                      <CreateTopic />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/partners/:slug/news/create" element={
+                    <ProtectedRoute>
+                      <NewsCreate />
                     </ProtectedRoute>
                   } />
 

@@ -65,11 +65,11 @@ export default function Index() {
     const getStatusBadge = (status) => {
         switch (status) {
             case 'active':
-                return <span className="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm font-medium"><CheckCircle className="w-4 h-4" /> Active</span>;
+                return <span className="flex items-center gap-1 text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400 px-3 py-1 rounded-full text-sm font-medium"><CheckCircle className="w-4 h-4" /> Active</span>;
             case 'pending':
-                return <span className="flex items-center gap-1 text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full text-sm font-medium"><Clock className="w-4 h-4" /> Pending Approval</span>;
+                return <span className="flex items-center gap-1 text-yellow-600 bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-400 px-3 py-1 rounded-full text-sm font-medium"><Clock className="w-4 h-4" /> Pending Approval</span>;
             case 'rejected':
-                return <span className="flex items-center gap-1 text-red-600 bg-red-50 px-3 py-1 rounded-full text-sm font-medium"><XCircle className="w-4 h-4" /> Rejected</span>;
+                return <span className="flex items-center gap-1 text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400 px-3 py-1 rounded-full text-sm font-medium"><XCircle className="w-4 h-4" /> Rejected</span>;
             default:
                 return <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 px-3 py-1 rounded-full text-sm font-medium"><AlertCircle className="w-4 h-4" /> Unknown</span>;
         }

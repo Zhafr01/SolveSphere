@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import api from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
 import { Search, Filter, MoreVertical, Shield, ShieldOff, Ban, CheckCircle } from 'lucide-react';
 import Pagination from '../../components/Pagination';
 
 export default function UsersIndex() {
+    const { user } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -27,7 +29,8 @@ export default function UsersIndex() {
     const fetchUsers = async (page = 1) => {
         setLoading(true);
         try {
-            const { data } = await api.get('/super-admin/users', {
+            const endpoint = user.role === 'super_admin' ? '/super-admin/users' : '/partner-admin/users';
+            const { data } = await api.get(endpoint, {
                 params: {
                     page,
                     search: searchTerm,
@@ -46,7 +49,8 @@ export default function UsersIndex() {
     const handleAction = async (id, action) => {
         if (!confirm(`Are you sure you want to ${action} this user?`)) return;
         try {
-            await api.post(`/super-admin/users/${id}/${action}`);
+            const prefix = user.role === 'super_admin' ? '/super-admin' : '/partner-admin';
+            await api.post(`${prefix}/users/${id}/${action}`);
             fetchUsers(currentPage); // Refresh current page
         } catch (error) {
             console.error(`Failed to ${action} user`, error);

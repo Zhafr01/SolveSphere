@@ -80,7 +80,7 @@ class PartnerApplicationController extends Controller
         $user->save();
 
         // Notify Super Admins
-        $superAdmins = User::role('super_admin')->get();
+        $superAdmins = User::where('role', 'super_admin')->get();
         \Illuminate\Support\Facades\Notification::send($superAdmins, new NewPartnerApplication($partner));
 
         if ($request->wantsJson() && !$request->inertia()) {

@@ -57,6 +57,13 @@ class PartnerSiteController extends Controller
             'total_reports' => $partner->reports()->count(),
         ];
 
+        $userRating = null;
+        if (auth('sanctum')->check()) {
+            $userRating = \App\Models\PartnerRating::where('user_id', auth('sanctum')->id())
+                ->where('partner_id', $partner->id)
+                ->first();
+        }
+
         if ($request->wantsJson() && !$request->inertia()) {
             return response()->json([
                 'partner' => $partner,
@@ -64,6 +71,7 @@ class PartnerSiteController extends Controller
                 'topics' => $topics,
                 'reports' => $reports,
                 'stats' => $stats,
+                'user_rating' => $userRating,
             ]);
         }
 

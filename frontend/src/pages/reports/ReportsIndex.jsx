@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
-import { Plus, Search, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Search, Trash2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CustomSelect from '../../components/ui/CustomSelect';
 import Pagination from '../../components/Pagination';
@@ -16,6 +16,7 @@ export default function ReportsIndex() {
     const [categoryFilter, setCategoryFilter] = useState('');
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
+    const [expandedReportId, setExpandedReportId] = useState(null);
     const { user } = useAuth();
     const { slug } = useParams();
 
@@ -56,10 +57,6 @@ export default function ReportsIndex() {
         }
     };
 
-    // ... (rest of the file)
-
-
-
     const handleStatusChange = async (id, newStatus) => {
         try {
             await api.put(`/reports/${id}`, { status: newStatus });
@@ -80,20 +77,8 @@ export default function ReportsIndex() {
         }
     };
 
-
-    const container = {
-        hidden: { opacity: 0 },
-        show: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const item = {
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0 }
+    const toggleExpand = (id) => {
+        setExpandedReportId(expandedReportId === id ? null : id);
     };
 
     if (loading) return <div>Loading reports...</div>;
@@ -104,31 +89,29 @@ export default function ReportsIndex() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300"
         >
-            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Reports</h1>
-                <div className="flex flex-wrap items-center gap-4">
-                    <motion.div
-                        className="relative"
-                        initial={{ width: 200 }}
-                        whileFocus={{ width: 300 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <input
-                            type="text"
-                            placeholder="Search reports..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 transition-all shadow-sm"
-                        />
-                        <div className="absolute left-3 top-2.5 text-gray-400">
-                            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
-                        </div>
-                    </motion.div>
+            <div className="flex flex-col gap-6 mb-8">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Reports</h1>
+                </div>
 
-                    {/* Filters */}
-                    {/* Filters */}
-                    <div className="flex flex-wrap gap-4">
-                        <div className="w-40">
+                {/* Search Bar - Full Width */}
+                <div className="w-full relative">
+                    <input
+                        type="text"
+                        placeholder="Search reports..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 transition-all shadow-sm"
+                    />
+                    <div className="absolute left-3 top-3.5 text-gray-400">
+                        {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+                    </div>
+                </div>
+
+                {/* Filters and Action Button Row */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex flex-wrap gap-4 w-full md:w-auto">
+                        <div className="w-full md:w-40">
                             <CustomSelect
                                 value={statusFilter}
                                 onChange={setStatusFilter}
@@ -142,7 +125,7 @@ export default function ReportsIndex() {
                             />
                         </div>
 
-                        <div className="w-40">
+                        <div className="w-full md:w-40">
                             <CustomSelect
                                 value={urgencyFilter}
                                 onChange={setUrgencyFilter}
@@ -157,7 +140,7 @@ export default function ReportsIndex() {
                             />
                         </div>
 
-                        <div className="w-44">
+                        <div className="w-full md:w-44">
                             <CustomSelect
                                 value={categoryFilter}
                                 onChange={setCategoryFilter}
@@ -174,7 +157,7 @@ export default function ReportsIndex() {
                     </div>
 
                     {!['super_admin', 'partner_admin'].includes(user?.role) && (
-                        <Link to="/reports/create" className="btn-primary flex items-center gap-2">
+                        <Link to="/reports/create" className="btn-primary flex items-center gap-2 whitespace-nowrap">
                             <Plus className="h-4 w-4" />
                             New Report
                         </Link>
@@ -186,7 +169,9 @@ export default function ReportsIndex() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
                     <thead className="bg-gray-50 dark:bg-slate-700/50">
                         <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider w-16">Details</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Partner</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Urgency</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
@@ -194,21 +179,32 @@ export default function ReportsIndex() {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                    <AnimatePresence mode='wait'>
-                        <motion.tbody
-                            key={page}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ duration: 0.2 }}
-                            className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700"
-                        >
-                            {reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
-                                reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map((report) => (
-                                    <tr
-                                        key={report.id}
-                                    >
+                    <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
+                        {reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
+                            reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map((report) => (
+                                <>
+                                    <tr key={report.id} className={`transition-colors ${expandedReportId === report.id ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : 'hover:bg-gray-50 dark:hover:bg-slate-700/50'}`}>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <button
+                                                onClick={() => toggleExpand(report.id)}
+                                                className={`p-1 rounded-full transition-all duration-200 ${expandedReportId === report.id ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400 rotate-180' : 'text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
+                                                title={expandedReportId === report.id ? "Hide Description" : "Show Description"}
+                                            >
+                                                <ChevronDown className="h-5 w-5" />
+                                            </button>
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{report.title}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">
+                                            {report.partner ? (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                                    {report.partner.name}
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-slate-300">
+                                                    Global
+                                                </span>
+                                            )}
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">{report.category}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -254,14 +250,31 @@ export default function ReportsIndex() {
                                             )}
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-slate-400">No reports found.</td>
-                                </tr>
-                            )}
-                        </motion.tbody>
-                    </AnimatePresence>
+                                    {expandedReportId === report.id && (
+                                        <tr className="bg-indigo-50/30 dark:bg-indigo-900/5">
+                                            <td colSpan="8" className="px-6 py-4 border-b border-indigo-100 dark:border-indigo-900/20">
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="text-sm text-gray-600 dark:text-slate-300 whitespace-pre-wrap pl-16 pr-4 py-2"
+                                                >
+                                                    <div className="flex items-start gap-2">
+                                                        <div className="min-w-[80px] font-semibold text-gray-900 dark:text-white text-xs uppercase tracking-wider mt-0.5">Description</div>
+                                                        <div className="flex-1 leading-relaxed">{report.content}</div>
+                                                    </div>
+                                                </motion.div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="8" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-slate-400">No reports found.</td>
+                            </tr>
+                        )}
+                    </tbody>
                 </table>
             </div>
 

@@ -72,9 +72,9 @@ class ReportController extends Controller
         // For regular users, they should only see their own reports.
         // The PartnerScope already limits them to their tenancy (null partner_id),
         // so we add an additional check for their user_id.
-        if ($user->isGeneralUser() && !$request->has('partner_slug')) {
-            $query->where('user_id', $user->id);
-        }
+        // if ($user->isGeneralUser() && !$request->has('partner_slug')) {
+        //     $query->where('user_id', $user->id);
+        // }
 
         // Super Admins need to see everything, so we can bypass the scope if they are not filtering.
         // Or let them filter by partner_id
@@ -117,23 +117,16 @@ class ReportController extends Controller
                 $query->whereRaw('1 = 0');
             }
         } else {
-            // Main Web: Filter by partner_id = null (Global Reports)
-            // Unless user is Super Admin, then show all (or filtered by partner_id if provided above)
-            if (!$user->isSuperAdmin()) {
-                $query->withoutGlobalScope(\App\Scopes\PartnerScope::class)
-                      ->whereNull('partner_id');
-            } else {
-                // Super Admin: Ensure PartnerScope is removed so they can see everything
-                // The previous block already handled removing the scope, but we ensure it here too just in case
-                $query->withoutGlobalScope(\App\Scopes\PartnerScope::class);
-            }
+            // Main Web: Show ONLY Global reports (partner_id = null)
+            $query->withoutGlobalScope(\App\Scopes\PartnerScope::class)
+                  ->whereNull('partner_id');
         }
 
-        if ($user->isGeneralUser() && !$request->has('partner_slug')) {
-            $query->where('user_id', $user->id);
-        }
+        // if ($user->isGeneralUser() && !$request->has('partner_slug')) {
+        //     $query->where('user_id', $user->id);
+        // }
 
-        $reports = $query->with('user')->latest()->paginate(10);
+        $reports = $query->with(['user', 'partner'])->latest()->paginate(10);
 
         if ($request->wantsJson() && !$request->inertia()) {
             return response()->json($reports);
@@ -169,7 +162,7 @@ class ReportController extends Controller
 
         $report = new Report();
         $report->user_id = $user->id;
-        $report->partner_id = $user->partner_id; // A user can only create a report for their own tenancy
+        $report->partner_id = $user->partner_id ?? $request->partner_id;
         $report->title = $request->title;
         $report->category = $request->category;
         $report->urgency = $request->urgency;
@@ -287,9 +280,9 @@ class ReportController extends Controller
             // $report->user->notify(new ReportStatusUpdated($report)); 
         } else {
             // General user, check time limit
-            if ($report->created_at->diffInMinutes(now()) > 15) {
-                return response()->json(['message' => 'You can no longer edit this report.'], 403);
-            }
+            // if ($report->created_at->diffInMinutes(now()) > 15) {
+            //     return response()->json(['message' => 'You can no longer edit this report.'], 403);
+            // }
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'category' => 'required|string|max:255',
@@ -342,9 +335,9 @@ class ReportController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        if ($report->created_at->diffInMinutes(now()) > 15) {
-            return response()->json(['message' => 'You can no longer delete this report.'], 403);
-        }
+        // if ($report->created_at->diffInMinutes(now()) > 15) {
+        //     return response()->json(['message' => 'You can no longer delete this report.'], 403);
+        // }
 
         $report->delete();
 

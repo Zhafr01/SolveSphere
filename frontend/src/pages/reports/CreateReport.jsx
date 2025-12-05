@@ -14,7 +14,7 @@ export default function CreateReport() {
     const [partners, setPartners] = useState([]);
     const [formData, setFormData] = useState({
         title: '',
-        description: '',
+        content: '',
         category: 'Bug',
         urgency: 'Medium',
         partner_id: currentPartner?.id || user?.partner_id || ''
@@ -52,7 +52,7 @@ export default function CreateReport() {
         try {
             await api.post('/reports', formData);
             alert('Report submitted successfully!');
-            navigate('/reports');
+            navigate(currentPartner ? `/partners/${currentPartner.slug}/reports` : '/reports');
         } catch (err) {
             console.error("Submission error:", err);
             const msg = err.response?.data?.message || 'Failed to create report';
@@ -65,7 +65,7 @@ export default function CreateReport() {
 
     return (
         <div className="max-w-2xl mx-auto">
-            <Card className="bg-white dark:bg-slate-800 transition-colors duration-300">
+            <Card className="bg-white dark:bg-slate-800 transition-colors duration-300 overflow-visible">
                 <CardHeader>
                     <CardTitle className="text-gray-900 dark:text-white">Submit a New Report</CardTitle>
                 </CardHeader>
@@ -77,7 +77,7 @@ export default function CreateReport() {
                             </div>
                         )}
 
-                        <div>
+                        <div className="relative z-60">
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title</label>
                             <input
                                 type="text"
@@ -90,21 +90,33 @@ export default function CreateReport() {
                             />
                         </div>
 
-                        <div>
-                            <CustomSelect
-                                label="Partner (Optional)"
-                                value={formData.partner_id}
-                                onChange={(val) => setFormData({ ...formData, partner_id: val })}
-                                options={[
-                                    { value: "", label: "-- Select Partner --" },
-                                    ...partners.map(p => ({ value: p.id, label: p.name }))
-                                ]}
-                                placeholder="Select Partner"
-                            />
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Leave blank for general platform issues.</p>
+                        <div className="relative z-50">
+                            {currentPartner ? (
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Partner</label>
+                                    <div className="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 cursor-not-allowed">
+                                        {currentPartner.name}
+                                    </div>
+                                    <input type="hidden" name="partner_id" value={currentPartner.id} />
+                                </div>
+                            ) : (
+                                <>
+                                    <CustomSelect
+                                        label="Partner (Optional)"
+                                        value={formData.partner_id}
+                                        onChange={(val) => setFormData({ ...formData, partner_id: val })}
+                                        options={[
+                                            { value: "", label: "-- Select Partner --" },
+                                            ...partners.map(p => ({ value: p.id, label: p.name }))
+                                        ]}
+                                        placeholder="Select Partner"
+                                    />
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Leave blank for general platform issues.</p>
+                                </>
+                            )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4 relative z-40">
                             <div>
                                 <CustomSelect
                                     label="Category"
@@ -135,11 +147,11 @@ export default function CreateReport() {
                             </div>
                         </div>
 
-                        <div>
+                        <div className="relative z-30">
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
                             <textarea
-                                name="description"
-                                value={formData.description}
+                                name="content"
+                                value={formData.content}
                                 onChange={handleChange}
                                 rows="5"
                                 className="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -148,10 +160,10 @@ export default function CreateReport() {
                             ></textarea>
                         </div>
 
-                        <div className="flex justify-end pt-4">
+                        <div className="flex justify-end pt-4 relative z-30">
                             <button
                                 type="button"
-                                onClick={() => navigate('/reports')}
+                                onClick={() => navigate(currentPartner ? `/partners/${currentPartner.slug}/reports` : '/reports')}
                                 className="btn-secondary mr-3"
                             >
                                 Cancel

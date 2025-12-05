@@ -289,22 +289,27 @@ class ChatController extends Controller
             'query' => 'required|string|min:1',
         ]);
 
-        $query = $request->input('query');
+        $query = strtolower($request->input('query'));
         $userId = Auth::id();
 
-        $messagesQuery = Message::where(function ($q) use ($userId) {
-            $q->where('sender_id', $userId)
-              ->orWhere('receiver_id', $userId);
-        })
-        ->where('message', 'LIKE', '%' . $query . '%')
-        ->orderBy('created_at', 'desc');
+        \Illuminate\Support\Facades\Log::info("Chat Search: User $userId searching for '$query'");
+
+        // Search Messages
+        $messagesQuery = Message::with(['sender', 'receiver'])
+            ->where(function ($q) use ($userId) {
+                $q->where('sender_id', $userId)
+                  ->orWhere('receiver_id', $userId);
+            })
+            ->whereRaw('LOWER(message) LIKE ?', ['%' . $query . '%'])
+            ->orderBy('created_at', 'desc');
         
         $messages = $messagesQuery->get();
+        \Illuminate\Support\Facades\Log::info("Chat Search: Found " . $messages->count() . " messages");
 
         $messages = $messages->map(function ($message) use ($userId) {
-            $otherUserId = $message->sender_id === $userId ? $message->receiver_id : $message->sender_id;
-            $otherUser = User::withoutGlobalScope(\App\Scopes\PartnerScope::class)->find($otherUserId);
+            $otherUser = $message->sender_id === $userId ? $message->receiver : $message->sender;
 
+            // If user is deleted or not found (shouldn't happen with foreign keys but safe to check)
             if (!$otherUser) return null;
 
             return [
@@ -324,20 +329,32 @@ class ChatController extends Controller
         // Search Users
         $user = Auth::user();
         $usersQuery = User::withoutGlobalScope(\App\Scopes\PartnerScope::class)
-            ->where('name', 'LIKE', '%' . $query . '%')
+            ->whereRaw('LOWER(name) LIKE ?', ['%' . $query . '%'])
             ->where('id', '!=', $userId);
 
-        if ($user->role === 'partner_admin') {
-            $usersQuery->where(function($q) use ($user) {
-                $q->where('role', 'super_admin')
-                  ->orWhere(function($q2) use ($user) {
-                      $q2->where('role', 'partner_admin')
-                         ->where('partner_id', $user->partner_id);
-                  });
-            });
+        // Get Friend IDs
+        $friendIds = DB::table('friends')
+            ->selectRaw("CASE WHEN user_id = ? THEN friend_id ELSE user_id END as id", [$userId])
+            ->where(function ($q) use ($userId) {
+                $q->where('user_id', $userId)
+                    ->orWhere('friend_id', $userId);
+            })
+            ->where('status', 'accepted')
+            ->pluck('id')
+            ->toArray();
+
+        if ($user->role === 'super_admin') {
+             $usersQuery->where(function($q) {
+                 $q->whereIn('role', ['partner_admin', 'super_admin']);
+             });
+        } elseif ($user->role === 'partner_admin') {
+             $usersQuery->where(function($q) {
+                 $q->whereIn('role', ['super_admin', 'partner_admin']);
+             });
         } elseif ($user->role === 'general_user') {
-             $usersQuery->where('role', 'partner_admin')
-                ->where('partner_id', $user->partner_id);
+             $usersQuery->where(function($q) use ($friendIds) {
+                 $q->whereIn('id', $friendIds);
+             });
         }
         // Super Admin sees all
 
@@ -357,5 +374,37 @@ class ChatController extends Controller
         $results = $messages->concat($userResults)->values();
 
         return response()->json($results);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'message' => 'required|string',
+        ]);
+
+        $message = Message::findOrFail($id);
+
+        if ($message->sender_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $message->update([
+            'message' => $request->message,
+        ]);
+
+        return response()->json($message);
+    }
+
+    public function destroy($id)
+    {
+        $message = Message::findOrFail($id);
+
+        if ($message->sender_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $message->delete();
+
+        return response()->json(['message' => 'Message deleted']);
     }
 }

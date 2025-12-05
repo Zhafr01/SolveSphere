@@ -45,7 +45,7 @@ export default function CreateTopic() {
         try {
             await api.post('/forum-topics', formData);
             alert('Topic created successfully!');
-            navigate('/forum');
+            navigate(currentPartner ? `/partners/${currentPartner.slug}/forum` : '/forum');
         } catch (err) {
             console.error("Submission error:", err);
             const msg = err.response?.data?.message || 'Failed to create topic';
@@ -58,7 +58,7 @@ export default function CreateTopic() {
 
     return (
         <div className="max-w-2xl mx-auto">
-            <Card className="bg-white dark:bg-slate-800 transition-colors duration-300">
+            <Card className="bg-white dark:bg-slate-800 transition-colors duration-300 overflow-visible">
                 <CardHeader>
                     <CardTitle className="text-gray-900 dark:text-white">Start a New Discussion</CardTitle>
                 </CardHeader>
@@ -70,7 +70,7 @@ export default function CreateTopic() {
                             </div>
                         )}
 
-                        <div>
+                        <div className="relative z-60">
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Topic Title</label>
                             <input
                                 type="text"
@@ -83,8 +83,16 @@ export default function CreateTopic() {
                             />
                         </div>
 
-                        {!currentPartner && (
-                            <div>
+                        {currentPartner ? (
+                            <div className="relative z-50 mb-4">
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Partner</label>
+                                <div className="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 cursor-not-allowed">
+                                    {currentPartner.name}
+                                </div>
+                                <input type="hidden" name="partner_id" value={currentPartner.id} />
+                            </div>
+                        ) : (
+                            <div className="relative z-50">
                                 <CustomSelect
                                     label="Partner (Optional)"
                                     value={formData.partner_id}
@@ -99,7 +107,7 @@ export default function CreateTopic() {
                             </div>
                         )}
 
-                        <div>
+                        <div className="relative z-40">
                             <CustomSelect
                                 label="Category"
                                 value={formData.category}
@@ -114,7 +122,7 @@ export default function CreateTopic() {
                             />
                         </div>
 
-                        <div>
+                        <div className="relative z-30">
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Content</label>
                             <textarea
                                 name="content"
@@ -127,10 +135,10 @@ export default function CreateTopic() {
                             ></textarea>
                         </div>
 
-                        <div className="flex justify-end pt-4">
+                        <div className="flex justify-end gap-4 relative z-20">
                             <button
                                 type="button"
-                                onClick={() => navigate('/forum')}
+                                onClick={() => navigate(currentPartner ? `/partners/${currentPartner.slug}/forum` : '/forum')}
                                 className="btn-secondary mr-3"
                             >
                                 Cancel

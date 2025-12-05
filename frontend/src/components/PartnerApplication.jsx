@@ -95,12 +95,12 @@ export default function PartnerApplication({ isOpen, onClose }) {
                             leaveFrom="opacity-100 scale-100"
                             leaveTo="opacity-0 scale-95"
                         >
-                            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-6 text-left align-middle shadow-xl transition-all">
                                 <div className="flex justify-between items-center mb-4">
-                                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
                                         {step === 1 ? 'Apply as Partner' : 'Application Submitted'}
                                     </Dialog.Title>
-                                    <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
+                                    <button onClick={onClose} className="text-gray-400 hover:text-gray-500 dark:text-slate-400 dark:hover:text-slate-300">
                                         <X className="h-5 w-5" />
                                     </button>
                                 </div>
@@ -108,28 +108,28 @@ export default function PartnerApplication({ isOpen, onClose }) {
                                 {step === 1 ? (
                                     <form onSubmit={handleSubmit} className="space-y-4">
                                         {error && (
-                                            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+                                            <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm">
                                                 {error}
                                             </div>
                                         )}
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Partner Name</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Partner Name</label>
                                             <input
                                                 type="text"
                                                 name="name"
                                                 value={formData.name}
                                                 onChange={handleChange}
-                                                className="input-field"
+                                                className="input-field dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                                                 required
                                                 placeholder="e.g. PixelForge Games"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Domain Slug</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Domain Slug</label>
                                             <div className="flex">
-                                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                                                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 text-gray-500 dark:text-slate-400 text-sm">
                                                     solvesphere.com/partners/
                                                 </span>
                                                 <input
@@ -137,7 +137,7 @@ export default function PartnerApplication({ isOpen, onClose }) {
                                                     name="domain"
                                                     value={formData.domain}
                                                     onChange={handleChange}
-                                                    className="input-field rounded-l-none"
+                                                    className="input-field rounded-l-none dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                                                     required
                                                     placeholder="pixelforge"
                                                 />
@@ -145,41 +145,41 @@ export default function PartnerApplication({ isOpen, onClose }) {
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Website URL</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Website URL</label>
                                             <input
                                                 type="url"
                                                 name="website"
                                                 value={formData.website}
                                                 onChange={handleChange}
-                                                className="input-field"
+                                                className="input-field dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                                                 placeholder="https://pixelforge.com"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Description</label>
                                             <textarea
                                                 name="description"
                                                 value={formData.description}
                                                 onChange={handleChange}
                                                 rows="3"
-                                                className="input-field"
+                                                className="input-field dark:bg-slate-900 dark:border-slate-700 dark:text-white"
                                                 required
                                                 placeholder="Tell us about your organization..."
                                             ></textarea>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
-                                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-indigo-500 transition-colors cursor-pointer relative">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Logo</label>
+                                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-slate-600 border-dashed rounded-md hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors cursor-pointer relative bg-white dark:bg-slate-900">
                                                 <div className="space-y-1 text-center">
                                                     {logoPreview ? (
                                                         <img src={logoPreview} alt="Preview" className="mx-auto h-24 w-24 object-contain" />
                                                     ) : (
-                                                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                                        <Upload className="mx-auto h-12 w-12 text-gray-400 dark:text-slate-500" />
                                                     )}
-                                                    <div className="flex text-sm text-gray-600 justify-center">
-                                                        <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                                                    <div className="flex text-sm text-gray-600 dark:text-slate-400 justify-center">
+                                                        <label className="relative cursor-pointer bg-white dark:bg-slate-900 rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 focus-within:outline-none">
                                                             <span>Upload a file</span>
                                                             <input
                                                                 type="file"
@@ -191,7 +191,7 @@ export default function PartnerApplication({ isOpen, onClose }) {
                                                             />
                                                         </label>
                                                     </div>
-                                                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
+                                                    <p className="text-xs text-gray-500 dark:text-slate-500">PNG, JPG, GIF up to 2MB</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -208,11 +208,11 @@ export default function PartnerApplication({ isOpen, onClose }) {
                                     </form>
                                 ) : (
                                     <div className="text-center py-6">
-                                        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-                                            <CheckCircle className="h-10 w-10 text-green-600" />
+                                        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
+                                            <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
                                         </div>
-                                        <h3 className="text-xl font-medium text-gray-900 mb-2">Application Received!</h3>
-                                        <p className="text-gray-500 mb-6">
+                                        <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">Application Received!</h3>
+                                        <p className="text-gray-500 dark:text-slate-400 mb-6">
                                             Your application has been submitted successfully. Our team will review it and get back to you shortly.
                                         </p>
                                         <button
