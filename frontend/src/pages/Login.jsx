@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState(null);
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -13,8 +15,14 @@ export default function Login() {
         e.preventDefault();
         setError(null);
         try {
-            await login({ email, password });
-            navigate('/dashboard');
+            const data = await login({ email, password });
+
+            // Redirect to appropriate landing page
+            if (data.user?.partner) {
+                navigate(`/partners/${data.user.partner.slug}`);
+            } else {
+                navigate('/');
+            }
         } catch (err) {
             let errorMessage = err.response?.data?.message || 'Login failed';
             if (errorMessage.includes('SQLSTATE') || errorMessage.includes('Connection refused')) {
@@ -47,15 +55,24 @@ export default function Login() {
                 <label className="block text-slate-700 dark:text-slate-200 text-sm font-semibold mb-2" htmlFor="password">
                     Password
                 </label>
-                <input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="input-field"
-                    required
-                    placeholder="••••••••"
-                />
+                <div className="relative">
+                    <input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="input-field pr-10"
+                        required
+                        placeholder="••••••••"
+                    />
+                    <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                        onClick={() => setShowPassword(!showPassword)}
+                    >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                </div>
             </div>
 
             <div className="flex items-center justify-end">

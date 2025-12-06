@@ -37,7 +37,10 @@ class LandingPageController extends Controller
 
         if (!$partner) {
             // This is the main site, load global content and active partners
-            $partners = Partner::whereIn('status', ['approved', 'active'])->get();
+            $partners = Partner::whereIn('status', ['approved', 'active'])
+                ->withCount('ratings')
+                ->withAvg('ratings', 'rating')
+                ->get();
             $news = News::whereNull('partner_id')->latest()->take(3)->get();
             $topics = ForumTopic::whereNull('partner_id')->latest()->take(5)->get();
         } else {

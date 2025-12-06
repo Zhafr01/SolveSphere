@@ -52,7 +52,11 @@ export default function CreateReport() {
         try {
             await api.post('/reports', formData);
             alert('Report submitted successfully!');
-            navigate(currentPartner ? `/partners/${currentPartner.slug}/reports` : '/reports');
+            if (currentPartner) {
+                navigate(`/partners/${currentPartner.slug}/reports`);
+            } else {
+                navigate('/reports');
+            }
         } catch (err) {
             console.error("Submission error:", err);
             const msg = err.response?.data?.message || 'Failed to create report';

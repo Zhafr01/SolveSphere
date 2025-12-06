@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Cache;
 
 class ProfileController extends Controller
 {
@@ -121,6 +122,7 @@ class ProfileController extends Controller
 
         return response()->json(['message' => 'Account deleted successfully']);
     }
+
     public function show($id)
     {
         $user = \App\Models\User::findOrFail($id);
@@ -160,5 +162,87 @@ class ProfileController extends Controller
             'friend_status' => $friendStatus,
             'friendship_id' => $friendship ? $friendship->id : null
         ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/profile/password-code",
+     *     summary="Send verification code for password change",
+     *     tags={"Profile"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"current_password"},
+     *             @OA\Property(property="current_password", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Code sent")
+     * )
+     */
+    public function sendPasswordCode(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+        ]);
+
+        $code = rand(100000, 999999);
+        
+        // Use Cache instead of Session for API reliability
+        // Key: password_verification_code_USERID
+        // Expiry: 10 minutes (600 seconds)
+        Cache::put('password_verification_code_' . $request->user()->id, $code, now()->addMinutes(10));
+
+        \Illuminate\Support\Facades\Mail::to($request->user())->send(new \App\Mail\PasswordVerificationMail($code));
+
+        return response()->json(['message' => 'Verification code sent to your email. Check your logs if testing locally.']);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/profile/password",
+     *     summary="Update password using verification code",
+     *     tags={"Profile"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"current_password", "new_password", "new_password_confirmation", "verification_code"},
+     *             @OA\Property(property="current_password", type="string"),
+     *             @OA\Property(property="new_password", type="string"),
+     *             @OA\Property(property="new_password_confirmation", type="string"),
+     *             @OA\Property(property="verification_code", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Password updated")
+     * )
+     */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'new_password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
+            'verification_code' => ['required'],
+        ]);
+
+        $cacheKey = 'password_verification_code_' . $request->user()->id;
+        $cachedCode = Cache::get($cacheKey);
+
+        if (!$cachedCode) {
+            return response()->json(['message' => 'Verification code expired or invalid.'], 422);
+        }
+
+        if ($request->verification_code != $cachedCode) {
+            return response()->json(['message' => 'Invalid verification code.'], 422);
+        }
+
+        $request->user()->update([
+            'password' => \Illuminate\Support\Facades\Hash::make($request->new_password),
+        ]);
+
+        // Clear cache
+        Cache::forget($cacheKey);
+
+        return response()->json(['message' => 'Password updated successfully.']);
     }
 }

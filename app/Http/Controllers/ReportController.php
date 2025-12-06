@@ -212,8 +212,9 @@ class ReportController extends Controller
      *     )
      * )
      */
-    public function show(Report $report)
+    public function show($id)
     {
+        $report = Report::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
         \Illuminate\Support\Facades\Gate::authorize('view-report', $report);
 
         $report->load('user');
@@ -264,8 +265,9 @@ class ReportController extends Controller
      *     )
      * )
      */
-    public function update(Request $request, Report $report)
+    public function update(Request $request, $id)
     {
+        $report = Report::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
         \Illuminate\Support\Facades\Gate::authorize('manage-report', $report);
 
         $user = Auth::user();
@@ -328,12 +330,11 @@ class ReportController extends Controller
      *     )
      * )
      */
-    public function destroy(Report $report)
+    public function destroy($id)
     {
-        // Only the author can delete, and only within 15 minutes. Admins cannot delete.
-        if ($report->user_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        $report = Report::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
+        // Use the gate to authorize deletion. This allows admins and the author to delete.
+        \Illuminate\Support\Facades\Gate::authorize('manage-report', $report);
 
         // if ($report->created_at->diffInMinutes(now()) > 15) {
         //     return response()->json(['message' => 'You can no longer delete this report.'], 403);

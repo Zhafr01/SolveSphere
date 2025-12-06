@@ -31,27 +31,33 @@ export default function NotificationSettings() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             <div className="flex items-center gap-4">
-                <Link to="/super-admin/settings" className="flex items-center gap-2 p-2 px-3 rounded-lg hover:bg-slate-100 text-slate-600 transition-colors">
-                    <ArrowLeft className="h-5 w-5" />
-                    <span className="font-medium">Back</span>
+                <Link
+                    to="/super-admin/settings"
+                    className="p-2 -ml-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
+                    title="Go Back"
+                >
+                    <ArrowLeft className="h-6 w-6" />
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Notification Settings</h1>
-                    <p className="text-slate-500 text-sm">Configure how and when you receive alerts.</p>
+                    <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Notification Settings</h1>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">Configure how and when you receive alerts.</p>
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 bg-slate-50">
-                            <div className="flex items-center gap-3">
-                                <Mail className="h-5 w-5 text-slate-600" />
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors duration-300">
+                <form onSubmit={handleSubmit} className="p-8 space-y-8">
+                    <div className="space-y-8">
+                        {/* Email Notifications */}
+                        <div className="flex items-center justify-between p-6 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-slate-600">
+                                    <Mail className="h-6 w-6 text-indigo-500 dark:text-indigo-400" />
+                                </div>
                                 <div>
-                                    <h3 className="font-medium text-slate-700">Email Notifications</h3>
-                                    <p className="text-sm text-slate-500">Receive important updates via email.</p>
+                                    <h3 className="text-lg font-medium text-slate-800 dark:text-white">Email Notifications</h3>
+                                    <p className="text-slate-500 dark:text-slate-400">Receive important updates via email.</p>
                                 </div>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
@@ -62,16 +68,19 @@ export default function NotificationSettings() {
                                     onChange={handleChange}
                                     className="sr-only peer"
                                 />
-                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                <div className="w-14 h-7 bg-slate-200 dark:bg-slate-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
                             </label>
                         </div>
 
-                        <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200 bg-slate-50">
-                            <div className="flex items-center gap-3">
-                                <Smartphone className="h-5 w-5 text-slate-600" />
+                        {/* Push Notifications */}
+                        <div className="flex items-center justify-between p-6 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-slate-600">
+                                    <Smartphone className="h-6 w-6 text-indigo-500 dark:text-indigo-400" />
+                                </div>
                                 <div>
-                                    <h3 className="font-medium text-slate-700">Push Notifications</h3>
-                                    <p className="text-sm text-slate-500">Receive real-time alerts on your device.</p>
+                                    <h3 className="text-lg font-medium text-slate-800 dark:text-white">Push Notifications</h3>
+                                    <p className="text-slate-500 dark:text-slate-400">Receive real-time alerts on your device.</p>
                                 </div>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
@@ -82,56 +91,64 @@ export default function NotificationSettings() {
                                     onChange={handleChange}
                                     className="sr-only peer"
                                 />
-                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                <div className="w-14 h-7 bg-slate-200 dark:bg-slate-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-indigo-600"></div>
                             </label>
                         </div>
 
-                        <div className="pt-4 border-t border-slate-100">
-                            <h3 className="font-medium text-slate-800 mb-4">Alert Preferences</h3>
-                            <div className="space-y-3">
-                                <label className="flex items-center gap-3">
+                        <div className="pt-8 border-t border-slate-100 dark:border-slate-700">
+                            <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-6">Alert Preferences</h3>
+                            <div className="space-y-4">
+                                <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer">
                                     <input
                                         type="checkbox"
                                         name="newPartnerAlert"
                                         checked={formData.newPartnerAlert}
                                         onChange={handleChange}
-                                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                        className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-slate-800"
                                     />
-                                    <span className="text-slate-700">New Partner Applications</span>
+                                    <span className="text-base text-slate-700 dark:text-slate-200">New Partner Applications</span>
                                 </label>
-                                <label className="flex items-center gap-3">
+                                <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer">
                                     <input
                                         type="checkbox"
                                         name="newReportAlert"
                                         checked={formData.newReportAlert}
                                         onChange={handleChange}
-                                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                        className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-slate-800"
                                     />
-                                    <span className="text-slate-700">New Reports Submitted</span>
+                                    <span className="text-base text-slate-700 dark:text-slate-200">New Reports Submitted</span>
                                 </label>
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t border-slate-100">
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Email Digest Frequency</label>
-                            <select
-                                name="digestFrequency"
-                                value={formData.digestFrequency}
-                                onChange={handleChange}
-                                className="w-full rounded-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
-                            >
-                                <option value="daily">Daily Summary</option>
-                                <option value="weekly">Weekly Summary</option>
-                                <option value="never">Never</option>
-                            </select>
+                        <div className="pt-8 border-t border-slate-100 dark:border-slate-700">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email Digest Frequency</label>
+                            <div className="relative">
+                                <select
+                                    name="digestFrequency"
+                                    value={formData.digestFrequency}
+                                    onChange={handleChange}
+                                    className="w-full appearance-none rounded-xl border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 px-4 py-3 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all cursor-pointer"
+                                >
+                                    <option value="daily">Daily Summary</option>
+                                    <option value="weekly">Weekly Summary</option>
+                                    <option value="never">Never</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 dark:text-slate-400">
+                                    <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Choose how often you want to receive summary emails.</p>
                         </div>
                     </div>
 
-                    <div className="flex justify-end pt-4 border-t border-slate-100">
+                    <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-700">
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
                         >
                             <Save className="h-4 w-4" />
                             {isLoading ? 'Saving...' : 'Save Changes'}

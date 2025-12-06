@@ -6,6 +6,7 @@ import { Plus, Search, Trash2, Loader2, ChevronDown, ChevronUp } from 'lucide-re
 import { motion, AnimatePresence } from 'framer-motion';
 import CustomSelect from '../../components/ui/CustomSelect';
 import Pagination from '../../components/Pagination';
+import PageLoader from '../../components/ui/PageLoader';
 
 export default function ReportsIndex() {
     const [reports, setReports] = useState([]);
@@ -81,13 +82,13 @@ export default function ReportsIndex() {
         setExpandedReportId(expandedReportId === id ? null : id);
     };
 
-    if (loading) return <div>Loading reports...</div>;
+    if (loading) return <PageLoader message="Loading reports..." />;
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300"
+            className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300 max-w-7xl mx-auto"
         >
             <div className="flex flex-col gap-6 mb-8">
                 <div className="flex justify-between items-center">
@@ -157,7 +158,7 @@ export default function ReportsIndex() {
                     </div>
 
                     {!['super_admin', 'partner_admin'].includes(user?.role) && (
-                        <Link to="/reports/create" className="btn-primary flex items-center gap-2 whitespace-nowrap">
+                        <Link to={slug ? `/partners/${slug}/reports/create` : "/reports/create"} className="btn-primary flex items-center gap-2 whitespace-nowrap">
                             <Plus className="h-4 w-4" />
                             New Report
                         </Link>
@@ -169,7 +170,7 @@ export default function ReportsIndex() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
                     <thead className="bg-gray-50 dark:bg-slate-700/50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider w-16">Details</th>
+
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Partner</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
@@ -184,15 +185,7 @@ export default function ReportsIndex() {
                             reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map((report) => (
                                 <>
                                     <tr key={report.id} className={`transition-colors ${expandedReportId === report.id ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : 'hover:bg-gray-50 dark:hover:bg-slate-700/50'}`}>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <button
-                                                onClick={() => toggleExpand(report.id)}
-                                                className={`p-1 rounded-full transition-all duration-200 ${expandedReportId === report.id ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400 rotate-180' : 'text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
-                                                title={expandedReportId === report.id ? "Hide Description" : "Show Description"}
-                                            >
-                                                <ChevronDown className="h-5 w-5" />
-                                            </button>
-                                        </td>
+
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{report.title}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">
                                             {report.partner ? (
@@ -241,32 +234,28 @@ export default function ReportsIndex() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">
                                             {new Date(report.created_at).toLocaleDateString()}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-2">
-                                            <Link to={`/reports/${report.id}`} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300">View</Link>
-                                            {user?.id === report.user_id && (
-                                                <button onClick={() => handleDelete(report.id)} className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            )}
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <div className="flex items-center gap-3">
+                                                <Link
+                                                    to={slug ? `/partners/${slug}/reports/${report.id}` : `/reports/${report.id}`}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
+                                                >
+                                                    View
+                                                </Link>
+                                                {(user?.id === report.user_id || user?.role === 'super_admin' || (user?.role === 'partner_admin' && user?.partner_id === report.partner_id)) && (
+                                                    <button
+                                                        onClick={() => handleDelete(report.id)}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                                                        title="Delete Report"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                        <span className="hidden sm:inline">Delete</span>
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
-                                    {expandedReportId === report.id && (
-                                        <tr className="bg-indigo-50/30 dark:bg-indigo-900/5">
-                                            <td colSpan="8" className="px-6 py-4 border-b border-indigo-100 dark:border-indigo-900/20">
-                                                <motion.div
-                                                    initial={{ opacity: 0, height: 0 }}
-                                                    animate={{ opacity: 1, height: 'auto' }}
-                                                    exit={{ opacity: 0, height: 0 }}
-                                                    className="text-sm text-gray-600 dark:text-slate-300 whitespace-pre-wrap pl-16 pr-4 py-2"
-                                                >
-                                                    <div className="flex items-start gap-2">
-                                                        <div className="min-w-[80px] font-semibold text-gray-900 dark:text-white text-xs uppercase tracking-wider mt-0.5">Description</div>
-                                                        <div className="flex-1 leading-relaxed">{report.content}</div>
-                                                    </div>
-                                                </motion.div>
-                                            </td>
-                                        </tr>
-                                    )}
+
                                 </>
                             ))
                         ) : (

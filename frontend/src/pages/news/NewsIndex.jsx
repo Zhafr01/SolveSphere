@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
-import { Plus, Trash2, ThumbsUp, Search, Loader2 } from 'lucide-react';
+import { Plus, Trash2, ThumbsUp, Search, Loader2, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Pagination from '../../components/Pagination';
+import PageLoader from '../../components/ui/PageLoader';
 
 export default function NewsIndex() {
     const [news, setNews] = useState([]);
@@ -85,13 +86,13 @@ export default function NewsIndex() {
         show: { opacity: 1, y: 0 }
     };
 
-    if (loading) return <div>Loading news...</div>;
+    if (loading) return <PageLoader message="Loading news..." />;
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300"
+            className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300 max-w-7xl mx-auto"
         >
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white">News</h1>
@@ -114,7 +115,7 @@ export default function NewsIndex() {
                         </div>
                     </motion.div>
                     {((user?.role === 'super_admin' && !slug) || (user?.role === 'partner_admin' && slug)) && (
-                        <Link to="/news/create" className="btn-primary flex items-center gap-2 whitespace-nowrap">
+                        <Link to={slug ? `/partners/${slug}/news/create` : "/news/create"} className="btn-primary flex items-center gap-2 whitespace-nowrap">
                             <Plus className="h-4 w-4" />
                             Post News
                         </Link>
@@ -149,17 +150,29 @@ export default function NewsIndex() {
                                 <div className="p-6 flex-1 flex flex-col justify-between">
                                     <div>
                                         <div className="flex justify-between items-start">
-                                            <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">{newsItem.title}</h2>
+                                            <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">
+                                                <Link to={slug ? `/partners/${slug}/news/${newsItem.id}` : `/news/${newsItem.id}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                                    {newsItem.title}
+                                                </Link>
+                                            </h2>
                                             {['super_admin', 'partner_admin'].includes(user?.role) && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        handleDelete(newsItem.id);
-                                                    }}
-                                                    className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <Link
+                                                        to={slug ? `/partners/${slug}/news/${newsItem.id}/edit` : `/news/${newsItem.id}/edit`}
+                                                        className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1"
+                                                    >
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </Link>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            handleDelete(newsItem.id);
+                                                        }}
+                                                        className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 p-1"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                         <p className="text-gray-600 dark:text-slate-300 text-sm mb-4 line-clamp-3">{newsItem.content}</p>

@@ -53,6 +53,21 @@ class PartnerRatingController extends Controller
             ->latest()
             ->paginate(20);
 
-        return response()->json($ratings);
+        $stats = [
+            'average' => round(PartnerRating::where('partner_id', $partner->id)->avg('rating'), 1),
+            'total' => PartnerRating::where('partner_id', $partner->id)->count(),
+            'distribution' => [
+                5 => PartnerRating::where('partner_id', $partner->id)->where('rating', 5)->count(),
+                4 => PartnerRating::where('partner_id', $partner->id)->where('rating', 4)->count(),
+                3 => PartnerRating::where('partner_id', $partner->id)->where('rating', 3)->count(),
+                2 => PartnerRating::where('partner_id', $partner->id)->where('rating', 2)->count(),
+                1 => PartnerRating::where('partner_id', $partner->id)->where('rating', 1)->count(),
+            ]
+        ];
+
+        return response()->json([
+            'ratings' => $ratings,
+            'stats' => $stats
+        ]);
     }
 }

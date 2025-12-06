@@ -4,7 +4,7 @@ import { Settings as SettingsIcon, Shield, Bell, Globe, Database } from 'lucide-
 
 export default function Settings() {
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-slate-800 dark:text-white">System Settings</h1>
             </div>

@@ -27,6 +27,8 @@ use App\Http\Controllers\PartnerAdmin\UserManagementController;
 // Public Routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [App\Http\Controllers\ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password', [App\Http\Controllers\ForgotPasswordController::class, 'reset']);
 Route::get('/landing-page', [App\Http\Controllers\LandingPageController::class, 'index']);
 Route::get('/partners/{slug}', [App\Http\Controllers\PartnerSiteController::class, 'index']);
 Route::post('/partners/{slug}/register', [App\Http\Controllers\PartnerAuthController::class, 'store']);
@@ -45,6 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update']);
     Route::post('/profile', [App\Http\Controllers\ProfileController::class, 'update']); // Add POST route for multipart/form-data
     Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy']);
+    Route::post('/profile/password-code', [App\Http\Controllers\ProfileController::class, 'sendPasswordCode']);
+    Route::post('/profile/password', [App\Http\Controllers\ProfileController::class, 'updatePassword']);
     Route::get('/users/{id}/profile', [App\Http\Controllers\ProfileController::class, 'show']);
 
     // Dashboard & Home
@@ -87,6 +91,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Partner Ratings
     Route::post('/partners/{slug}/rate', [App\Http\Controllers\PartnerRatingController::class, 'store']);
+    // Partner Settings
+    Route::get('/partner-admin/settings', [App\Http\Controllers\PartnerAdmin\PartnerSettingsController::class, 'show']);
+    Route::post('/partner-admin/settings', [App\Http\Controllers\PartnerAdmin\PartnerSettingsController::class, 'update']);
     Route::get('/partners/{slug}/ratings', [App\Http\Controllers\PartnerRatingController::class, 'index']);
 
 

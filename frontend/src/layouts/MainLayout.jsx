@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import NotificationPopover from '../components/NotificationPopover';
 import ThemeToggle from '../components/ThemeToggle';
+import BottomNav from '../components/BottomNav';
 
 export default function MainLayout() {
     const { user, logout } = useAuth();
@@ -124,7 +125,7 @@ export default function MainLayout() {
     return (
         <div className="min-h-screen flex flex-col">
             <nav className="sticky top-0 z-50 glass-panel border-b border-white/40 dark:border-slate-700/40">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
                         {/* Left: Logo */}
                         <div className="flex items-center flex-shrink-0">
@@ -179,6 +180,7 @@ export default function MainLayout() {
                                         ]}
                                     />
                                     <NavLink to={currentPartner ? `/partners/${currentPartner.slug}/chat` : "/chat"}>Messages</NavLink>
+                                    <NavLink to={currentPartner ? `/partners/${currentPartner.slug}/settings` : "/partner-admin/settings"}>Settings</NavLink>
                                 </>
                             ) : (
                                 <>
@@ -191,7 +193,7 @@ export default function MainLayout() {
                                             { label: 'News', to: currentPartner ? `/partners/${currentPartner.slug}/news` : "/news" },
                                         ]}
                                     />
-                                    <NavLink to="/social">Social</NavLink>
+                                    <NavLink to={currentPartner ? `/partners/${currentPartner.slug}/social` : "/social"}>Social</NavLink>
                                     <NavLink to={currentPartner ? `/partners/${currentPartner.slug}/chat` : "/chat"}>Messages</NavLink>
                                 </>
                             )}
@@ -205,7 +207,7 @@ export default function MainLayout() {
                                 <>
                                     <NotificationPopover />
 
-                                    <Link to="/profile" className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700 hover:opacity-80 transition-opacity">
+                                    <Link to={currentPartner ? `/partners/${currentPartner.slug}/profile` : "/profile"} className="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700 hover:opacity-80 transition-opacity">
                                         <div className="flex flex-col items-end">
                                             <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{user.name}</span>
                                             <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">{(user.role || 'user').replace('_', ' ')}</span>
@@ -276,6 +278,7 @@ export default function MainLayout() {
                                         <Link to={currentPartner ? `/partners/${currentPartner.slug}/forum` : "/forum"} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">Forum</Link>
                                         <Link to={currentPartner ? `/partners/${currentPartner.slug}/news` : "/news"} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">News</Link>
                                         <Link to={currentPartner ? `/partners/${currentPartner.slug}/chat` : "/chat"} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">Messages</Link>
+                                        <Link to={currentPartner ? `/partners/${currentPartner.slug}/settings` : "/partner-admin/settings"} className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">Settings</Link>
                                     </>
                                 ) : (
                                     <>
@@ -310,48 +313,44 @@ export default function MainLayout() {
                 </AnimatePresence>
             </nav>
 
-            <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full flex flex-col md:flex-row gap-6">
-                {location.pathname !== '/' && (
-                    <div className="md:w-48 flex-shrink-0">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="sticky top-24 group flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200/60 dark:border-slate-700/60 shadow-sm hover:shadow-md hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300"
-                        >
-                            <ArrowLeft className="h-4 w-4 text-slate-500 dark:text-slate-400 group-hover:-translate-x-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-all duration-300" />
-                            <span className="text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Back</span>
-                        </button>
-                    </div>
-                )}
-                <div className="flex-1 min-w-0">
+            <main className="flex-grow pt-10 pb-32 px-4 sm:px-6 lg:px-8 mx-auto w-full relative flex flex-col md:pb-24">
+
+                <div className="w-full pb-32 md:pb-0">
                     <Outlet />
+                </div>
+
+                {/* Sticky Back Buttons */}
+                <div className="sticky bottom-20 md:bottom-6 flex justify-end px-2 z-50 pointer-events-none mt-auto">
+                    {currentPartner && (
+                        <Link
+                            to={user ? "/dashboard" : "/"}
+                            className="pointer-events-auto flex items-center gap-2 px-4 py-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm font-medium text-slate-700 dark:text-slate-200 group"
+                        >
+                            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                            Back to Main Site
+                        </Link>
+                    )}
+
+                    {!currentPartner && location.pathname === '/dashboard' && (
+                        <Link
+                            to="/"
+                            className="pointer-events-auto flex items-center gap-2 px-4 py-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm font-medium text-slate-700 dark:text-slate-200 group"
+                        >
+                            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                            Back to Landing Page
+                        </Link>
+                    )}
                 </div>
             </main>
 
-            <footer className="glass-panel mt-auto py-6 border-t border-white/40 dark:border-slate-700/40">
-                <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 dark:text-slate-400 text-sm">
+            <footer className="glass-panel mt-auto py-6 border-t border-white/40 dark:border-slate-700/40 hidden md:block">
+                <div className="max-w-[95%] mx-auto px-4 text-center text-slate-500 dark:text-slate-400 text-sm">
                     &copy; {new Date().getFullYear()} SolveSphere. All rights reserved.
                 </div>
             </footer>
 
-            {currentPartner && (
-                <Link
-                    to={user ? "/dashboard" : "/"}
-                    className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm font-medium text-slate-700 dark:text-slate-200 group"
-                >
-                    <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-                    Back to Main Site
-                </Link>
-            )}
+            <BottomNav />
 
-            {!currentPartner && location.pathname === '/dashboard' && (
-                <Link
-                    to="/"
-                    className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all text-sm font-medium text-slate-700 dark:text-slate-200 group"
-                >
-                    <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-                    Back to Landing Page
-                </Link>
-            )}
         </div >
     );
 }

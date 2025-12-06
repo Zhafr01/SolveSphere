@@ -3,6 +3,7 @@ import api from '../lib/api';
 
 const AuthContext = createContext({
     user: null,
+    setUser: () => { },
     login: async () => { },
     register: async () => { },
     logout: async () => { },
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+        <AuthContext.Provider value={{ user, setUser, login, register, logout, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

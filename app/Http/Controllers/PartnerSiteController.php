@@ -51,7 +51,19 @@ class PartnerSiteController extends Controller
         $reports = $partner->reports()->latest()->take(5)->get();
 
         $stats = [
-            'total_users' => $partner->users()->count(),
+            'total_users' => \App\Models\User::withoutGlobalScope(\App\Scopes\PartnerScope::class)
+                ->where(function ($q) use ($partner) {
+                    $q->where('partner_id', $partner->id)
+                      ->orWhere(function ($sub) use ($partner) {
+                          $sub->whereNull('partner_id')
+                              ->where(function ($interaction) use ($partner) {
+                                  $interaction->whereHas('forumTopics', fn($t) => $t->where('partner_id', $partner->id))
+                                        ->orWhereHas('reports', fn($r) => $r->where('partner_id', $partner->id))
+                                        ->orWhereHas('forumComments.topic', fn($ct) => $ct->where('partner_id', $partner->id));
+                              });
+                      });
+                })
+                ->count(),
             'total_news' => $partner->news()->count(),
             'total_topics' => $partner->forumTopics()->count(),
             'total_reports' => $partner->reports()->count(),

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../../lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
-import { Upload, CheckCircle, XCircle, Clock, AlertCircle, FileText } from 'lucide-react';
+import { Upload, CheckCircle, XCircle, Clock, AlertCircle, FileText, CreditCard, Wallet, Banknote } from 'lucide-react';
 
 export default function Index() {
     const [subscription, setSubscription] = useState(null);
@@ -10,6 +10,7 @@ export default function Index() {
     const [preview, setPreview] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [selectedPayment, setSelectedPayment] = useState(null);
 
     useEffect(() => {
         fetchSubscription();
@@ -82,7 +83,7 @@ export default function Index() {
     );
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Subscription Management</h1>
             </div>
@@ -136,6 +137,138 @@ export default function Index() {
                             <p>No subscription record found.</p>
                         </div>
                     )}
+                </CardContent>
+            </Card>
+
+            {/* Pricing & Payment Methods Card */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <CreditCard className="w-5 h-5 text-indigo-600" />
+                        Pricing & Payment Details
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                    {/* Pricing Section */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Subscription Pricing</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="p-6 rounded-xl border-2 border-slate-100 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all bg-white dark:bg-slate-800">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-slate-500 dark:text-slate-400 font-medium">International</span>
+                                    <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs px-2 py-1 rounded-full font-bold">USD</span>
+                                </div>
+                                <div className="flex items-end gap-1">
+                                    <span className="text-3xl font-bold text-slate-900 dark:text-white">$9.99</span>
+                                    <span className="text-slate-500 dark:text-slate-400 mb-1">/ bulan per aplikasi</span>
+                                </div>
+                            </div>
+
+                            <div className="p-6 rounded-xl border-2 border-slate-100 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 transition-all bg-white dark:bg-slate-800">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-slate-500 dark:text-slate-400 font-medium">Indonesia</span>
+                                    <span className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs px-2 py-1 rounded-full font-bold">IDR</span>
+                                </div>
+                                <div className="flex items-end gap-1">
+                                    <span className="text-3xl font-bold text-slate-900 dark:text-white">Rp 159.000</span>
+                                    <span className="text-slate-500 dark:text-slate-400 mb-1">/ bulan per aplikasi</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Payment Options Section */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Payment Options</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedPayment('bank')}
+                                className={`flex items-center gap-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border cursor-pointer transition-all hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left relative z-10
+                                ${selectedPayment === 'bank' ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-slate-100 dark:border-slate-700'}`}
+                            >
+                                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                                    <Banknote className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-slate-900 dark:text-white">Bank Transfer</p>
+                                    <p className="text-xs text-slate-500">BCA, Mandiri, BNI</p>
+                                </div>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setSelectedPayment('ewallet')}
+                                className={`flex items-center gap-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border cursor-pointer transition-all hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left relative z-10
+                                ${selectedPayment === 'ewallet' ? 'border-purple-500 ring-1 ring-purple-500' : 'border-slate-100 dark:border-slate-700'}`}
+                            >
+                                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
+                                    <Wallet className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-slate-900 dark:text-white">E-Wallet</p>
+                                    <p className="text-xs text-slate-500">GoPay, OVO, Dana</p>
+                                </div>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setSelectedPayment('paypal')}
+                                className={`flex items-center gap-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border cursor-pointer transition-all hover:bg-slate-100 dark:hover:bg-slate-700 w-full text-left relative z-10
+                                ${selectedPayment === 'paypal' ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-slate-100 dark:border-slate-700'}`}
+                            >
+                                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                                    <CreditCard className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-slate-900 dark:text-white">PayPal</p>
+                                    <p className="text-xs text-slate-500">International</p>
+                                </div>
+                            </button>
+                        </div>
+
+                        {/* Payment Details Section */}
+                        {selectedPayment && (
+                            <div className="mt-6 p-6 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 animate-in fade-in slide-in-from-top-4 duration-300">
+                                <h4 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <CheckCircle className="w-4 h-4 text-green-500" />
+                                    Payment Instructions
+                                </h4>
+                                <div className="space-y-4">
+                                    {selectedPayment === 'bank' && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="p-3 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">
+                                                <div className="text-xs text-slate-500 uppercase font-bold mb-1">BCA</div>
+                                                <div className="font-mono text-lg font-medium text-slate-800 dark:text-slate-200">123 456 7890</div>
+                                                <div className="text-sm text-slate-500">a.n PT SolveSphere Indonesia</div>
+                                            </div>
+                                            <div className="p-3 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">
+                                                <div className="text-xs text-slate-500 uppercase font-bold mb-1">Mandiri</div>
+                                                <div className="font-mono text-lg font-medium text-slate-800 dark:text-slate-200">098 765 4321000</div>
+                                                <div className="text-sm text-slate-500">a.n PT SolveSphere Indonesia</div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {selectedPayment === 'ewallet' && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="p-3 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">
+                                                <div className="text-xs text-slate-500 uppercase font-bold mb-1">GoPay / OVO / Dana</div>
+                                                <div className="font-mono text-lg font-medium text-slate-800 dark:text-slate-200">0812 3456 7890</div>
+                                                <div className="text-sm text-slate-500">a.n SolveSphere Admin</div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {selectedPayment === 'paypal' && (
+                                        <div className="p-3 bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">
+                                            <div className="text-xs text-slate-500 uppercase font-bold mb-1">PayPal Account</div>
+                                            <div className="font-mono text-lg font-medium text-slate-800 dark:text-slate-200">admin@solvesphere.com</div>
+                                            <div className="text-sm text-slate-500">Please include your Partner ID in the notes</div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
 

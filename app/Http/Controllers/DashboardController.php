@@ -50,10 +50,29 @@ class DashboardController extends Controller
                     ->where('partner_id', $partner->id)->latest()->take(5);
                 
                 // For stats, we need to bypass scope and filter by partner
-                $stats['total_users'] = \App\Models\User::where('partner_id', $partner->id)->count();
+                $stats['total_users'] = \App\Models\User::withoutGlobalScope(\App\Scopes\PartnerScope::class)
+                    ->where('role', '!=', 'partner_admin')
+                    ->where(function ($q) use ($partner) {
+                        $q->where('partner_id', $partner->id)
+                          ->orWhere(function ($sub) use ($partner) {
+                              $sub->whereNull('partner_id')
+                                  ->where(function ($interaction) use ($partner) {
+                                      $interaction->whereHas('forumTopics', fn($t) => $t->where('partner_id', $partner->id))
+                                            ->orWhereHas('reports', fn($r) => $r->where('partner_id', $partner->id))
+                                            ->orWhereHas('forumComments.topic', fn($ct) => $ct->where('partner_id', $partner->id));
+                                  });
+                          });
+                    })
+                    ->count();
                 $stats['total_reports'] = Report::withoutGlobalScope(\App\Scopes\PartnerScope::class)->where('partner_id', $partner->id)->count();
                 $stats['total_topics'] = ForumTopic::withoutGlobalScope(\App\Scopes\PartnerScope::class)->where('partner_id', $partner->id)->count();
                 $stats['total_news'] = News::withoutGlobalScope(\App\Scopes\PartnerScope::class)->where('partner_id', $partner->id)->count();
+
+                if (auth('sanctum')->check()) {
+                   $userRating = \App\Models\PartnerRating::where('user_id', auth('sanctum')->id())
+                       ->where('partner_id', $partner->id)
+                       ->first();
+                }
             }
         } else {
             // Main Dashboard
@@ -88,7 +107,19 @@ class DashboardController extends Controller
             $total_partners = \App\Models\Partner::count();
             $pending_partners = \App\Models\Partner::where('status', 'pending')->count();
              // We need to bypass the scope to get ALL users for the super admin
-            $total_users = \App\Models\User::withoutGlobalScope(\App\Scopes\PartnerScope::class)->count();
+            $total_users = \App\Models\User::withoutGlobalScope(\App\Scopes\PartnerScope::class)
+                ->where(function ($q) {
+                    $q->whereNull('partner_id')
+                      ->orWhere(function ($sub) {
+                          $sub->whereNotNull('partner_id')
+                              ->where(function ($interaction) {
+                                  $interaction->whereHas('forumTopics', fn($t) => $t->whereNull('partner_id'))
+                                        ->orWhereHas('reports', fn($r) => $r->whereNull('partner_id'))
+                                        ->orWhereHas('forumComments.topic', fn($ct) => $ct->whereNull('partner_id'));
+                              });
+                      });
+                })
+                ->count();
             
             // Overwrite the scoped stats with global stats for super admin
             $stats['total_users'] = $total_users;
@@ -106,6 +137,7 @@ class DashboardController extends Controller
                 'total_partners' => $total_partners,
                 'pending_partners' => $pending_partners,
                 'total_users' => $total_users,
+                'user_rating' => $userRating ?? null,
             ]);
         }
 

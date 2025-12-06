@@ -9,6 +9,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
@@ -17,6 +18,8 @@ import PartnerSite from './pages/PartnerSite';
 import PartnersIndex from './pages/admin/PartnersIndex';
 import UsersIndex from './pages/admin/UsersIndex';
 import Settings from './pages/admin/Settings';
+
+import PartnerSiteSettings from './pages/admin/settings/PartnerSiteSettings';
 import SiteSettings from './pages/admin/settings/SiteSettings';
 import SecuritySettings from './pages/admin/settings/SecuritySettings';
 import NotificationSettings from './pages/admin/settings/NotificationSettings';
@@ -30,6 +33,7 @@ import CreateTopic from './pages/forum/CreateTopic';
 import ForumDetail from './pages/forum/ForumDetail';
 import NewsIndex from './pages/news/NewsIndex';
 import NewsCreate from './pages/news/Create';
+import NewsDetail from './pages/news/NewsDetail';
 import ChatIndex from './pages/chat/ChatIndex';
 import SocialIndex from './pages/SocialIndex';
 import SubscriptionIndex from './pages/Subscription/Index';
@@ -58,11 +62,11 @@ const ProtectedRoute = ({ children, roles = [] }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <PartnerProvider>
+    <ErrorBoundary>
+      <AuthProvider>
         <ThemeProvider>
-          <ErrorBoundary>
-            <Router>
+          <Router>
+            <PartnerProvider>
               <Routes>
                 {/* Public Routes */}
                 <Route element={<MainLayout />}>
@@ -76,6 +80,7 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                 </Route>
 
                 {/* Protected Routes */}
@@ -120,6 +125,11 @@ function App() {
                       <ChatIndex />
                     </ProtectedRoute>
                   } />
+                  <Route path="/partners/:slug/chat/:id" element={
+                    <ProtectedRoute>
+                      <ChatIndex />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/partners/:slug/reports" element={
                     <ProtectedRoute>
                       <ReportsIndex />
@@ -130,12 +140,32 @@ function App() {
                       <CreateReport />
                     </ProtectedRoute>
                   } />
+                  <Route path="/partners/:slug/reports/:id" element={
+                    <ProtectedRoute>
+                      <ReportDetail />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/partners/:slug/forum/create" element={
                     <ProtectedRoute>
                       <CreateTopic />
                     </ProtectedRoute>
                   } />
+                  <Route path="/partners/:slug/forum/:id" element={
+                    <ProtectedRoute>
+                      <ForumDetail />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/partners/:slug/news/create" element={
+                    <ProtectedRoute>
+                      <NewsCreate />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/partners/:slug/news/:id" element={
+                    <ProtectedRoute>
+                      <NewsDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/partners/:slug/news/:id/edit" element={
                     <ProtectedRoute>
                       <NewsCreate />
                     </ProtectedRoute>
@@ -193,9 +223,24 @@ function App() {
                       <SubscriptionIndex />
                     </ProtectedRoute>
                   } />
+                  <Route path="/partner-admin/settings" element={
+                    <ProtectedRoute roles={['partner_admin']}>
+                      <PartnerSiteSettings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/partners/:slug/settings" element={
+                    <ProtectedRoute roles={['partner_admin']}>
+                      <PartnerSiteSettings />
+                    </ProtectedRoute>
+                  } />
 
                   {/* Feature Routes */}
                   <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/partners/:slug/profile" element={
                     <ProtectedRoute>
                       <Profile />
                     </ProtectedRoute>
@@ -245,7 +290,22 @@ function App() {
                       <NewsCreate />
                     </ProtectedRoute>
                   } />
+                  <Route path="/news/:id" element={
+                    <ProtectedRoute>
+                      <NewsDetail />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/news/:id/edit" element={
+                    <ProtectedRoute>
+                      <NewsCreate />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/social" element={
+                    <ProtectedRoute>
+                      <SocialIndex />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/partners/:slug/social" element={
                     <ProtectedRoute>
                       <SocialIndex />
                     </ProtectedRoute>
@@ -263,11 +323,11 @@ function App() {
                   <Route path="*" element={<NotFound />} />
                 </Route>
               </Routes>
-            </Router>
-          </ErrorBoundary>
+            </PartnerProvider>
+          </Router>
         </ThemeProvider>
-      </PartnerProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

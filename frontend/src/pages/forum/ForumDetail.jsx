@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
+import { usePartner } from '../../context/PartnerContext';
 import { MessageSquare, ThumbsUp, Trash2, ArrowLeft, Reply, Edit2, MoreVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import PageLoader from '../../components/ui/PageLoader';
 
 const CommentItem = ({ comment, onReply, onLike, onDelete, onEdit, user, depth = 0 }) => {
     const isLiked = comment.likes?.some(l => l.id === user?.id);
@@ -31,25 +33,42 @@ const CommentItem = ({ comment, onReply, onLike, onDelete, onEdit, user, depth =
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className={`mt-4 ${depth > 0 ? 'ml-8 border-l-2 border-slate-100 dark:border-slate-700 pl-4' : ''}`}
+            className={`mt-4 ${depth > 0 ? 'ml-4 md:ml-8' : ''}`}
         >
-            <div className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-4 transition-colors duration-300">
+            <div className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-4 transition-colors duration-300 relative group">
+                {/* Thread line for nested comments */}
+                {depth > 0 && (
+                    <div className="absolute -left-4 md:-left-8 top-6 w-4 md:w-8 h-px bg-slate-200 dark:bg-slate-700" />
+                )}
+
                 <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-600 dark:text-slate-300 font-bold text-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-600 dark:text-slate-300 font-bold text-sm ring-2 ring-white dark:ring-slate-800">
                             {comment.user?.name?.charAt(0)}
                         </div>
                         <div>
-                            <span className="font-semibold text-gray-900 dark:text-white text-sm block">{comment.user?.name}</span>
-                            <span className="text-xs text-gray-500 dark:text-slate-400">{new Date(comment.created_at).toLocaleDateString()}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="font-bold text-gray-900 dark:text-white text-sm">{comment.user?.name}</span>
+                                {comment.user?.role === 'super_admin' && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 uppercase tracking-wider">
+                                        Super Admin
+                                    </span>
+                                )}
+                                {comment.user?.role === 'partner_admin' && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300 border border-violet-200 dark:border-violet-500/30 uppercase tracking-wider">
+                                        Admin
+                                    </span>
+                                )}
+                            </div>
+                            <span className="text-xs text-gray-500 dark:text-slate-400 font-medium">{new Date(comment.created_at).toLocaleDateString()}</span>
                         </div>
                     </div>
                     {canModify && (
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => setIsEditing(!isEditing)} className="text-gray-400 hover:text-indigo-600">
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => setIsEditing(!isEditing)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
                                 <Edit2 className="h-4 w-4" />
                             </button>
-                            <button onClick={() => onDelete(comment.id)} className="text-gray-400 hover:text-red-600">
+                            <button onClick={() => onDelete(comment.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
                                 <Trash2 className="h-4 w-4" />
                             </button>
                         </div>
@@ -59,40 +78,42 @@ const CommentItem = ({ comment, onReply, onLike, onDelete, onEdit, user, depth =
                 {isEditing ? (
                     <form onSubmit={handleEditSubmit} className="mt-2">
                         <textarea
-                            className="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full p-3 border border-gray-200 dark:border-slate-600 rounded-xl text-sm bg-gray-50 dark:bg-slate-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:outline-none transition-all resize-y min-h-[100px]"
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
                         />
-                        <div className="mt-2 flex justify-end gap-2">
-                            <button type="button" onClick={() => setIsEditing(false)} className="text-xs text-gray-500 hover:text-gray-700">Cancel</button>
-                            <button type="submit" className="text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700">Save</button>
+                        <div className="mt-3 flex justify-end gap-2">
+                            <button type="button" onClick={() => setIsEditing(false)} className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 px-3 py-1.5">Cancel</button>
+                            <button type="submit" className="text-xs font-medium bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-500/20">Save Changes</button>
                         </div>
                     </form>
                 ) : (
-                    <p className="text-gray-800 dark:text-slate-300 text-sm mb-3 whitespace-pre-wrap">{comment.content}</p>
+                    <div className="pl-13 ml-1">
+                        <p className="text-gray-800 dark:text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+                    </div>
                 )}
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/50">
                     <motion.button
-                        whileTap={{ scale: 0.9 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => onLike(comment.id)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${isLiked ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium' : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600'}`}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${isLiked ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500/20' : 'bg-gray-50 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 ring-1 ring-transparent hover:ring-gray-200 dark:hover:ring-slate-600'}`}
                     >
                         <motion.div
                             initial={false}
                             animate={isLiked ? { scale: [1, 1.2, 1] } : { scale: 1 }}
                             transition={{ duration: 0.2 }}
                         >
-                            <ThumbsUp className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
+                            <ThumbsUp className={`h-3.5 w-3.5 ${isLiked ? 'fill-current' : ''}`} />
                         </motion.div>
                         <span>{comment.likes_count || 0}</span>
                     </motion.button>
 
                     <button
                         onClick={() => setIsReplying(!isReplying)}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-gray-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
                     >
-                        <Reply className="h-4 w-4" /> Reply
+                        <Reply className="h-3.5 w-3.5" /> Reply
                     </button>
                 </div>
 
@@ -103,36 +124,43 @@ const CommentItem = ({ comment, onReply, onLike, onDelete, onEdit, user, depth =
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             onSubmit={handleReplySubmit}
-                            className="mt-4 pl-4 border-l-2 border-indigo-100 dark:border-indigo-900/50 overflow-hidden"
+                            className="mt-4 overflow-hidden"
                         >
-                            <textarea
-                                className="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                                placeholder="Write a reply..."
-                                value={replyContent}
-                                onChange={(e) => setReplyContent(e.target.value)}
-                            />
-                            <div className="mt-2 flex justify-end gap-2">
-                                <button type="button" onClick={() => setIsReplying(false)} className="text-xs text-gray-500 hover:text-gray-700">Cancel</button>
-                                <button type="submit" className="text-xs bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700">Reply</button>
+                            <div className="relative">
+                                <textarea
+                                    className="w-full p-4 border border-gray-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:outline-none bg-gray-50 dark:bg-slate-900/50 text-gray-900 dark:text-white placeholder-gray-400 transition-all resize-y min-h-[100px]"
+                                    placeholder={`Reply to ${comment.user?.name}...`}
+                                    value={replyContent}
+                                    onChange={(e) => setReplyContent(e.target.value)}
+                                    autoFocus
+                                />
+                                <div className="absolute bottom-3 right-3 flex gap-2">
+                                    <button type="button" onClick={() => setIsReplying(false)} className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 px-3 py-1.5">Cancel</button>
+                                    <button type="submit" className="text-xs font-medium bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-500/20">Post Reply</button>
+                                </div>
                             </div>
                         </motion.form>
                     )}
                 </AnimatePresence>
             </div>
-            <AnimatePresence>
-                {comment.replies?.map(reply => (
-                    <CommentItem
-                        key={reply.id}
-                        comment={reply}
-                        onReply={onReply}
-                        onLike={onLike}
-                        onDelete={onDelete}
-                        onEdit={onEdit}
-                        user={user}
-                        depth={depth + 1}
-                    />
-                ))}
-            </AnimatePresence>
+
+            {/* Recursively render replies with container */}
+            <div className="border-l-2 border-slate-100 dark:border-slate-700/50 ml-5 md:ml-5 space-y-4">
+                <AnimatePresence>
+                    {comment.replies?.map(reply => (
+                        <CommentItem
+                            key={reply.id}
+                            comment={reply}
+                            onReply={onReply}
+                            onLike={onLike}
+                            onDelete={onDelete}
+                            onEdit={onEdit}
+                            user={user}
+                            depth={depth + 1}
+                        />
+                    ))}
+                </AnimatePresence>
+            </div>
         </motion.div >
     );
 };
@@ -140,6 +168,8 @@ const CommentItem = ({ comment, onReply, onLike, onDelete, onEdit, user, depth =
 export default function ForumDetail() {
     const { id } = useParams();
     const { user } = useAuth();
+    const { currentPartner } = usePartner();
+    const navigate = useNavigate();
     const [topic, setTopic] = useState(null);
     const [loading, setLoading] = useState(true);
     const [newComment, setNewComment] = useState('');
@@ -269,12 +299,16 @@ export default function ForumDetail() {
         if (!confirm("Are you sure you want to delete this topic?")) return;
         try {
             await api.delete(`/forum-topics/${id}`);
-            // Redirect would be handled by parent or router, but here we might need to navigate back
-            window.location.href = '/forum';
+            // Redirect based on current context
+            if (currentPartner) {
+                navigate(`/partners/${currentPartner.slug}/forum`);
+            } else {
+                navigate('/forum');
+            }
         } catch (error) {
             console.error("Failed to delete topic", error);
         }
-    }
+    };
 
 
     const handleUpdateTopic = async () => {
@@ -289,7 +323,7 @@ export default function ForumDetail() {
         }
     };
 
-    if (loading) return <div>Loading topic...</div>;
+    if (loading) return <PageLoader message="Loading topic..." />;
     if (!topic) return <div>Topic not found.</div>;
 
     const canModifyTopic = user?.id === topic.user_id || user?.role === 'super_admin' || user?.role === 'partner_admin';

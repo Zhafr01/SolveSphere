@@ -63,6 +63,33 @@ class Partner extends Model
         if (filter_var($value, FILTER_VALIDATE_URL)) {
             return $value;
         }
+
+        // Handle if value is already a storage path
+        if (str_starts_with($value, '/storage/') || str_starts_with($value, 'storage/')) {
+            return asset($value);
+        }
+
         return asset('storage/' . str_replace('public/', '', $value));
+    }
+
+    public function getBannerAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            return $value;
+        }
+        
+        // Handle if value is already a storage path
+        if (str_starts_with($value, '/storage/') || str_starts_with($value, 'storage/')) {
+            return asset($value);
+        }
+
+        return asset('storage/' . str_replace('public/', '', $value));
+    }
+    public function ratings()
+    {
+        return $this->hasMany(PartnerRating::class);
     }
 }

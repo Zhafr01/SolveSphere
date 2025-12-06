@@ -85,7 +85,7 @@ export default function PartnersIndex() {
     if (loading) return <div>Loading partners...</div>;
 
     return (
-        <div className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300">
+        <div className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300 max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Manage Partners</h1>
             </div>

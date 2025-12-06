@@ -27,7 +27,10 @@ class PartnerScope implements Scope
             }
 
             if ($user->partner_id) {
-                $builder->where($model->getTable() . '.partner_id', $user->partner_id);
+                $builder->where(function ($query) use ($model, $user) {
+                    $query->where($model->getTable() . '.partner_id', $user->partner_id)
+                          ->orWhereNull($model->getTable() . '.partner_id');
+                });
             } else {
                 $builder->whereNull($model->getTable() . '.partner_id');
             }

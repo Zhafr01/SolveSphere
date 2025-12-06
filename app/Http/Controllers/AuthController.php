@@ -117,7 +117,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = User::where('email', $request->email)->firstOrFail();
+        $user = User::with('partner')->where('email', $request->email)->firstOrFail();
 
         if ($user->status !== 'active') {
             $errorMessage = $user->status === 'suspended'

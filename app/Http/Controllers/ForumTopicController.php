@@ -39,7 +39,9 @@ class ForumTopicController extends Controller
             });
         }
         
-        $topics = $query->with('user')->withCount('comments')->latest()->paginate(10);
+        $topics = $query->with('user')->withCount(['comments' => function ($query) {
+            $query->withoutGlobalScope(\App\Scopes\PartnerScope::class);
+        }])->latest()->paginate(10);
 
         if ($request->wantsJson() && !$request->inertia()) {
             return response()->json($topics);
@@ -83,11 +85,16 @@ class ForumTopicController extends Controller
         ], 201);
     }
     
-    public function show(ForumTopic $forumTopic)
+    public function show($id)
     {
+        // Bypass PartnerScope to allow viewing topics from any partner if authorized (e.g. by direct link or admin interface)
+        // or effectively by the fact that if you have the ID you should be able to at least try to load it, 
+        // then the frontend/Policy can decide if you can see it.
+        $forumTopic = ForumTopic::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
         // PartnerScope handles tenancy.
         $forumTopic->load(['user', 'comments' => function ($query) {
-            $query->with(['user', 'likes'])->withCount('likes');
+            $query->withoutGlobalScope(\App\Scopes\PartnerScope::class)
+                  ->with(['user', 'likes'])->withCount('likes');
         }]);
         
         $forumTopic->is_liked_by_user = $forumTopic->likes()->where('user_id', Auth::id())->exists();
@@ -102,8 +109,9 @@ class ForumTopicController extends Controller
         ]);
     }
     
-    public function update(Request $request, ForumTopic $forumTopic)
+    public function update(Request $request, $id)
     {
+        $forumTopic = ForumTopic::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
         Gate::authorize('manage-forum-topic', $forumTopic);
 
         $request->validate([
@@ -119,8 +127,9 @@ class ForumTopicController extends Controller
         ]);
     }
     
-    public function destroy(ForumTopic $forumTopic)
+    public function destroy($id)
     {
+        $forumTopic = ForumTopic::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
         Gate::authorize('manage-forum-topic', $forumTopic);
 
         $forumTopic->delete();
@@ -128,8 +137,9 @@ class ForumTopicController extends Controller
         return response()->json(['message' => 'Topic deleted successfully']);
     }
 
-    public function markAsBestAnswer(ForumTopic $forumTopic, $commentId)
+    public function markAsBestAnswer($id, $commentId)
     {
+        $forumTopic = ForumTopic::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
         if ($forumTopic->user_id !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
@@ -140,8 +150,9 @@ class ForumTopicController extends Controller
         return response()->json(['message' => 'Marked as best answer']);
     }
 
-    public function like(Request $request, ForumTopic $forumTopic)
+    public function like(Request $request, $id)
     {
+        $forumTopic = ForumTopic::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
         $user = Auth::user();
 
         $like = $forumTopic->likes()->where('user_id', $user->id)->first();

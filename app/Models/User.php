@@ -131,4 +131,12 @@ class User extends Authenticatable
     {
         return $query->where('role', $role);
     }
+
+    public function getProfilePictureAttribute($value)
+    {
+        if ($value && \Illuminate\Support\Str::startsWith($value, '/storage')) {
+            return url($value);
+        }
+        return $value;
+    }
 }

@@ -45,7 +45,12 @@ export default function CreateTopic() {
         try {
             await api.post('/forum-topics', formData);
             alert('Topic created successfully!');
-            navigate(currentPartner ? `/partners/${currentPartner.slug}/forum` : '/forum');
+            // Use currentPartner from context or a slug param if we had one
+            if (currentPartner) {
+                navigate(`/partners/${currentPartner.slug}/forum`);
+            } else {
+                navigate('/forum');
+            }
         } catch (err) {
             console.error("Submission error:", err);
             const msg = err.response?.data?.message || 'Failed to create topic';

@@ -2,20 +2,28 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { User, Mail, Shield, Camera } from 'lucide-react';
+import { User, Mail, Shield, Camera, Eye, EyeOff } from 'lucide-react';
 
 export default function Profile() {
     const { user, setUser } = useAuth();
-    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         current_password: '',
         new_password: '',
-        new_password_confirmation: ''
+        new_password_confirmation: '',
+        profile_picture: null,
+        verification_code: ''
     });
+
+    const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [otpSent, setOtpSent] = useState(false);
+    const [requestingCode, setRequestingCode] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -41,45 +49,91 @@ export default function Profile() {
         }
     };
 
+    const handleRequestCode = async () => {
+        console.log("handleRequestCode called");
+        if (!formData.current_password) {
+            console.warn("No current password provided");
+            setMessage({ type: 'error', text: 'Please enter your current password to request a code.' });
+            return;
+        }
+
+        setRequestingCode(true);
+        setMessage({ type: '', text: '' });
+
+        try {
+            console.log("Sending request to /profile/password-code");
+            const res = await api.post('/profile/password-code', { current_password: formData.current_password });
+            console.log("Response:", res.data);
+            setOtpSent(true);
+            setMessage({ type: 'success', text: 'Verification code sent to your email.' });
+        } catch (error) {
+            console.error("Error in handleRequestCode:", error);
+            setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to send verification code.' });
+        } finally {
+            setRequestingCode(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setMessage({ type: '', text: '' });
 
-        const data = new FormData();
-        data.append('name', formData.name);
-        data.append('email', formData.email);
-        if (formData.current_password) data.append('current_password', formData.current_password);
-        if (formData.new_password) data.append('new_password', formData.new_password);
-        if (formData.new_password_confirmation) data.append('new_password_confirmation', formData.new_password_confirmation);
-        if (formData.profile_picture instanceof File) {
-            data.append('profile_picture', formData.profile_picture);
-        }
-        // Send as POST to handle file upload correctly in Laravel
-        // Do NOT manually set Content-Type to multipart/form-data, let Axios/Browser set it with boundary
         try {
-            const response = await api.post('/profile', data);
-            setUser(response.data.user); // Update auth context
-            setMessage({ type: 'success', text: 'Profile updated successfully.' });
+            // Update Profile Info
+            const data = new FormData();
+            data.append('name', formData.name);
+            data.append('email', formData.email);
+            if (formData.profile_picture instanceof File) {
+                data.append('profile_picture', formData.profile_picture);
+            }
+
+            await api.post('/profile', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            // Update Password (if provided)
+            if (formData.new_password) {
+                if (!formData.verification_code) {
+                    setMessage({ type: 'error', text: 'Please enter the verification code sent to your email.' });
+                    setLoading(false);
+                    return;
+                }
+
+                await api.post('/profile/password', {
+                    current_password: formData.current_password,
+                    new_password: formData.new_password,
+                    new_password_confirmation: formData.new_password_confirmation,
+                    verification_code: formData.verification_code
+                });
+            }
+
+            // Refresh user data (for name/email/pic updates)
+            const { data: userData } = await api.get('/user');
+            setUser(userData);
+
+            // Clear password fields
             setFormData(prev => ({
                 ...prev,
                 current_password: '',
                 new_password: '',
-                new_password_confirmation: '',
-                profile_picture: null // Reset file input
+                verification_code: ''
             }));
+            setOtpSent(false);
+
+            setMessage({ type: 'success', text: 'Profile updated successfully!' });
         } catch (error) {
-            setMessage({
-                type: 'error',
-                text: error.response?.data?.message || 'Failed to update profile.'
-            });
+            console.error(error);
+            setMessage({ type: 'error', text: error.response?.data?.message || error.message || 'Failed to update profile.' });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-2xl mx-auto space-y-6 mb-20">
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Profile Settings</h1>
 
             <Card className="glass-card">
@@ -160,43 +214,108 @@ export default function Profile() {
                             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Change Password</h3>
 
                             <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Current Password</label>
-                                    <input
-                                        type="password"
-                                        name="current_password"
-                                        value={formData.current_password}
-                                        onChange={handleChange}
-                                        className="input-field"
-                                    />
+                                <div className="flex gap-4 items-end">
+                                    <div className="flex-1">
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Current Password</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showCurrentPassword ? "text" : "password"}
+                                                name="current_password"
+                                                value={formData.current_password}
+                                                onChange={handleChange}
+                                                className="input-field pr-10"
+                                                placeholder="Required to change password"
+                                                autoComplete="new-password"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                            >
+                                                {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {formData.current_password && !otpSent && (
+                                        <button
+                                            type="button"
+                                            onClick={handleRequestCode}
+                                            disabled={requestingCode || !formData.current_password}
+                                            className="btn-secondary whitespace-nowrap mb-[2px]"
+                                            title="Click to receive a code to your email"
+                                        >
+                                            {requestingCode ? 'Sending...' : 'Get Verification Code'}
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">New Password</label>
-                                        <input
-                                            type="password"
-                                            name="new_password"
-                                            value={formData.new_password}
-                                            onChange={handleChange}
-                                            className="input-field"
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                type={showNewPassword ? "text" : "password"}
+                                                name="new_password"
+                                                value={formData.new_password}
+                                                onChange={handleChange}
+                                                className="input-field pr-10"
+                                                disabled={!formData.current_password}
+                                                placeholder={!formData.current_password ? "Enter current password first" : ""}
+                                                autoComplete="new-password"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                                disabled={!formData.current_password}
+                                            >
+                                                {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirm New Password</label>
-                                        <input
-                                            type="password"
-                                            name="new_password_confirmation"
-                                            value={formData.new_password_confirmation}
-                                            onChange={handleChange}
-                                            className="input-field"
-                                        />
+                                        <div className="relative">
+                                            <input
+                                                type={showConfirmPassword ? "text" : "password"}
+                                                name="new_password_confirmation"
+                                                value={formData.new_password_confirmation}
+                                                onChange={handleChange}
+                                                className="input-field pr-10"
+                                                disabled={!formData.new_password}
+                                                autoComplete="new-password"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                disabled={!formData.new_password}
+                                            >
+                                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
+
+                                {otpSent && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Verification Code (Sent to email)</label>
+                                        <input
+                                            type="text"
+                                            name="verification_code"
+                                            value={formData.verification_code}
+                                            onChange={handleChange}
+                                            className="input-field"
+                                            placeholder="Enter 6-digit code"
+                                            required={!!formData.new_password}
+                                        />
+                                        <p className="text-xs text-slate-500 mt-1">Check your spam folder or server logs.</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        <div className="flex justify-end pt-4">
+                        <div className="flex justify-end pt-4 relative z-20">
                             <button
                                 type="submit"
                                 disabled={loading}

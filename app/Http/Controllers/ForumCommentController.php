@@ -38,8 +38,10 @@ class ForumCommentController extends Controller
      *     )
      * )
      */
-    public function store(Request $request, ForumTopic $forumTopic)
+    public function store(Request $request, $forumTopicId)
     {
+        $forumTopic = ForumTopic::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($forumTopicId);
+
         $request->validate([
             'content' => 'required|string',
             'parent_id' => 'nullable|exists:forum_comments,id', // Add validation for parent_id
@@ -52,8 +54,13 @@ class ForumCommentController extends Controller
             'partner_id' => $forumTopic->partner_id,
         ]);
 
-        // Notify topic owner if not self
-        if ($forumTopic->user_id !== Auth::id()) {
+        if ($request->input('parent_id')) {
+            $parentComment = ForumComment::withoutGlobalScope(\App\Scopes\PartnerScope::class)->find($request->input('parent_id'));
+            if ($parentComment && $parentComment->user_id !== Auth::id()) {
+                $parentComment->user->notify(new \App\Notifications\NewReplyNotification($comment));
+            }
+        } elseif ($forumTopic->user_id !== Auth::id()) {
+             $forumTopic->user->notify(new \App\Notifications\NewForumComment($comment));
         }
 
         return response()->json([
@@ -97,8 +104,9 @@ class ForumCommentController extends Controller
      *     )
      * )
      */
-    public function update(Request $request, ForumTopic $forumTopic, ForumComment $comment)
+    public function update(Request $request, $forumTopicId, $commentId)
     {
+        $comment = ForumComment::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($commentId);
         if ($comment->user_id !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
@@ -142,8 +150,9 @@ class ForumCommentController extends Controller
      *     )
      * )
      */
-    public function destroy(ForumTopic $forumTopic, ForumComment $comment)
+    public function destroy($forumTopicId, $commentId)
     {
+        $comment = ForumComment::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($commentId);
         if ($comment->user_id !== Auth::id() && !Auth::user()->isSuperAdmin() && !Auth::user()->isPartnerAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
@@ -175,8 +184,9 @@ class ForumCommentController extends Controller
      *     )
      * )
      */
-    public function like(ForumComment $comment)
+    public function like($commentId)
     {
+        $comment = ForumComment::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($commentId);
         $user = Auth::user();
 
         if ($comment->likes()->where('user_id', $user->id)->exists()) {

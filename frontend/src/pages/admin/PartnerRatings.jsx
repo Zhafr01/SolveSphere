@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ArrowLeft, Star, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Pagination from '../../components/Pagination';
+import PageLoader from '../../components/ui/PageLoader';
 
 export default function PartnerRatings() {
     const { slug } = useParams();
@@ -12,6 +13,7 @@ export default function PartnerRatings() {
     const { user } = useAuth();
     const [ratings, setRatings] = useState([]);
     const [meta, setMeta] = useState({});
+    const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
 
@@ -22,8 +24,16 @@ export default function PartnerRatings() {
     const fetchRatings = async (pageNumber = 1) => {
         try {
             const { data } = await api.get(`/partners/${slug}/ratings?page=${pageNumber}`);
-            setRatings(data.data);
-            setMeta(data);
+            // Check if backend returns new structure (ratings + stats) or old (just ratings)
+            // Just in case checking for .ratings, otherwise fallback (though we constrained backend)
+            if (data.ratings) {
+                setRatings(data.ratings.data);
+                setMeta(data.ratings);
+                setStats(data.stats);
+            } else {
+                setRatings(data.data);
+                setMeta(data);
+            }
         } catch (error) {
             console.error("Failed to fetch ratings", error);
         } finally {
@@ -31,14 +41,10 @@ export default function PartnerRatings() {
         }
     };
 
-    if (loading) return (
-        <div className="flex justify-center items-center min-h-[60vh]">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-        </div>
-    );
+    if (loading) return <PageLoader message="Loading ratings..." />;
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto p-6">
             <div className="flex items-center gap-4 mb-8">
                 <button
                     onClick={() => navigate(-1)}
@@ -49,7 +55,51 @@ export default function PartnerRatings() {
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Partner Ratings</h1>
             </div>
 
+            {/* Stats Section */}
+            {stats && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {/* Average Rating Card */}
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center">
+                        <h2 className="text-5xl font-extrabold text-slate-800 dark:text-white mb-2">{stats.average || 0}</h2>
+                        <div className="flex gap-1 mb-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <Star key={star} className={`w-6 h-6 ${star <= Math.round(stats.average) ? 'text-yellow-400 fill-current' : 'text-slate-300 dark:text-slate-600'}`} />
+                            ))}
+                        </div>
+                        <p className="text-slate-500 dark:text-slate-400">Based on {stats.total} reviews</p>
+                    </div>
+
+                    {/* Distribution Bars */}
+                    <div className="md:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Rating Distribution</h3>
+                        <div className="space-y-3">
+                            {[5, 4, 3, 2, 1].map((star) => {
+                                const count = stats.distribution ? stats.distribution[star] : 0;
+                                const percentage = stats.total > 0 ? (count / stats.total) * 100 : 0;
+                                return (
+                                    <div key={star} className="flex items-center gap-4">
+                                        <div className="flex items-center gap-1 w-16 text-sm font-medium text-slate-600 dark:text-slate-300">
+                                            <span>{star} stars</span>
+                                        </div>
+                                        <div className="flex-grow h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${percentage}%` }}
+                                                transition={{ duration: 1 }}
+                                                className="h-full bg-yellow-400 rounded-full"
+                                            />
+                                        </div>
+                                        <span className="w-12 text-right text-sm text-slate-500 dark:text-slate-400">{count}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="space-y-4">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Recent Reviews</h3>
                 {ratings.length > 0 ? (
                     ratings.map((rating) => (
                         <motion.div

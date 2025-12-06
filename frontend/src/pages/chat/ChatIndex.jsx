@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePartner } from '../../context/PartnerContext';
 import { Send, Search, MoreVertical, MessageCircle, Image, X, Smile, CheckCheck, Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
+import PageLoader from '../../components/ui/PageLoader';
 
 export default function ChatIndex() {
     const { user } = useAuth();
@@ -361,10 +362,10 @@ export default function ChatIndex() {
         navigate(`${basePath}/${chatUser.id}`);
     };
 
-    if (loading) return <div className="flex justify-center items-center h-[calc(100vh-100px)]">Loading chat...</div>;
+    if (loading) return <PageLoader message="Loading chat..." />;
 
     return (
-        <div className="bg-white dark:bg-slate-900 shadow-sm sm:rounded-lg h-[calc(100vh-120px)] overflow-hidden flex">
+        <div className="bg-white dark:bg-slate-900 shadow-sm sm:rounded-lg h-[calc(100vh-120px)] overflow-hidden flex max-w-7xl mx-auto">
             {/* Sidebar - Conversation List */}
             <div className={`w-full md:w-1/3 border-r border-gray-200 dark:border-slate-700 flex flex-col ${activeChat ? 'hidden md:flex' : 'flex'}`}>
                 <div className="p-4 border-b border-gray-200 dark:border-slate-700">

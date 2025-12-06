@@ -27,12 +27,48 @@ class UserManagementController extends Controller
      *     )
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::where('partner_id', Auth::user()->partner_id)
-            ->where('role', 'general_user')
-            ->latest()
-            ->paginate(10);
+        $partnerId = Auth::user()->partner_id;
+        
+        $query = User::withoutGlobalScope(\App\Scopes\PartnerScope::class)
+            ->where('role', '!=', 'partner_admin') // Exclude other partner admins
+            ->where(function ($q) use ($partnerId) {
+                // 1. Users explicitly assigned to this partner
+                $q->where('partner_id', $partnerId)
+                // 2. OR Global users (User from main site) who have interacted with this partner's content
+                  ->orWhere(function ($sub) use ($partnerId) {
+                      $sub->whereNull('partner_id')
+                          ->where(function ($interaction) use ($partnerId) {
+                              // Has created a topic in this partner's forum
+                              $interaction->whereHas('forumTopics', function ($t) use ($partnerId) {
+                                  $t->where('partner_id', $partnerId);
+                              })
+                              // OR Has created a report in this partner's scope
+                              ->orWhereHas('reports', function ($r) use ($partnerId) {
+                                  $r->where('partner_id', $partnerId);
+                              })
+                              // OR Has commented on a topic belonging to this partner
+                              ->orWhereHas('forumComments.topic', function ($ct) use ($partnerId) {
+                                  $ct->where('partner_id', $partnerId);
+                              });
+                          });
+                  });
+            });
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        
+        if ($request->filled('role') && $request->role !== 'all') {
+            $query->where('role', $request->role);
+        }
+
+        $users = $query->latest()->paginate(10);
 
         return response()->json($users);
     }

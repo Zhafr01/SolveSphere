@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { usePartner } from '../../context/PartnerContext';
 import { ArrowLeft, Upload } from 'lucide-react';
 import CustomSelect from '../../components/ui/CustomSelect';
+import PageLoader from '../../components/ui/PageLoader';
 
 export default function NewsCreate() {
     const navigate = useNavigate();
+    const { id } = useParams(); // Get ID for edit mode
     const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(!!id);
     const { user } = useAuth();
     const { currentPartner } = usePartner() || {};
     const [partners, setPartners] = useState([]);
@@ -16,7 +19,8 @@ export default function NewsCreate() {
     const [formData, setFormData] = useState({
         title: '',
         content: '',
-        image: null,
+        image: null, // This will store the file object for upload
+        imageUrl: null, // This stores the existing image URL for display
         partner_id: currentPartner?.id || user?.partner_id || ''
     });
     const [error, setError] = useState('');
@@ -27,7 +31,29 @@ export default function NewsCreate() {
                 setPartners(res.data.data || []);
             }).catch(err => console.error(err));
         }
-    }, [currentPartner]);
+
+        if (id) {
+            fetchNews();
+        }
+    }, [currentPartner, id]);
+
+    const fetchNews = async () => {
+        try {
+            const { data } = await api.get(`/news/${id}`);
+            setFormData({
+                title: data.title,
+                content: data.content,
+                partner_id: data.partner_id || '',
+                image: null,
+                imageUrl: data.image
+            });
+        } catch (error) {
+            console.error("Failed to fetch news", error);
+            setError("Failed to load news details.");
+        } finally {
+            setFetching(false);
+        }
+    };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -45,6 +71,10 @@ export default function NewsCreate() {
         setLoading(true);
         setError('');
 
+        // For PUT (edit), we can use URLSearchParams or send JSON if no new image.
+        // But Laravel usually expects FormData for file uploads.
+        // Note: PUT/PATCH with FormData in Laravel/PHP can be tricky. Usually need _method: PUT.
+
         const data = new FormData();
         data.append('title', formData.title);
         data.append('content', formData.content);
@@ -55,17 +85,35 @@ export default function NewsCreate() {
             data.append('image', formData.image);
         }
 
+        if (id) {
+            data.append('_method', 'PUT'); // Spoof PUT for FormData
+        }
+
         try {
-            await api.post('/news', data, {
+            const url = id ? `/news/${id}` : '/news';
+
+            // If editing and using FormData with _method trick, use POST
+            // If creating, use POST. 
+            // So always POST if using FormData for file uploads in Laravel usually.
+            // But api client might handle it? usually axios post(url, data) is safe.
+
+            await api.post(url, data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            navigate(currentPartner ? `/partners/${currentPartner.slug}/news` : '/news');
+
+            if (currentPartner) {
+                navigate(`/partners/${currentPartner.slug}/news`);
+            } else {
+                navigate('/news');
+            }
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to create news.');
+            setError(err.response?.data?.message || 'Failed to save news.');
         } finally {
             setLoading(false);
         }
     };
+
+    if (fetching) return <PageLoader message="Loading news details..." />;
 
     return (
         <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 shadow-sm sm:rounded-lg p-6">
@@ -73,7 +121,7 @@ export default function NewsCreate() {
                 <button onClick={() => navigate(currentPartner ? `/partners/${currentPartner.slug}/news` : '/news')} className="text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200">
                     <ArrowLeft className="h-6 w-6" />
                 </button>
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Create News</h1>
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{id ? 'Edit News' : 'Create News'}</h1>
             </div>
 
             {error && (
@@ -144,9 +192,14 @@ export default function NewsCreate() {
                                 <p className="pl-1">or drag and drop</p>
                             </div>
                             <p className="text-xs text-gray-500 dark:text-slate-500">PNG, JPG, GIF up to 2MB</p>
-                            {formData.image && (
+                            {formData.image ? (
                                 <p className="text-sm text-green-600 dark:text-green-400 mt-2">Selected: {formData.image.name}</p>
-                            )}
+                            ) : formData.imageUrl ? (
+                                <div className="mt-2">
+                                    <p className="text-xs text-gray-500 mb-1">Current Image:</p>
+                                    <img src={formData.imageUrl.startsWith('http') ? formData.imageUrl : `http://localhost:8000/storage/${formData.imageUrl}`} alt="Current" className="h-20 w-auto mx-auto rounded" />
+                                </div>
+                            ) : null}
                         </div>
                     </div>
                 </div>
@@ -157,7 +210,7 @@ export default function NewsCreate() {
                         disabled={loading}
                         className="btn-primary"
                     >
-                        {loading ? 'Publishing...' : 'Publish News'}
+                        {loading ? (id ? 'Updating...' : 'Publishing...') : (id ? 'Update News' : 'Publish News')}
                     </button>
                 </div>
             </form>

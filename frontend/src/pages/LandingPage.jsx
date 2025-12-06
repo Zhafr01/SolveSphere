@@ -66,7 +66,7 @@ export default function LandingPage() {
                             SolveSphere
                         </h1>
                         <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto mb-10 font-light">
-                            A simply lovely way to make place for your users interaction with you.
+                            A simply lovely way to build and engage with your community.
                         </p>
 
                         <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -88,6 +88,92 @@ export default function LandingPage() {
                     <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-200 dark:bg-purple-900/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-30 animate-blob"></div>
                     <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-indigo-200 dark:bg-indigo-900/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
                     <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-pink-200 dark:bg-pink-900/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+                </div>
+            </section>
+
+            {/* About Section */}
+            <section className="py-24 relative overflow-hidden">
+                {/* Section Background */}
+                <div className="absolute inset-0 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px]"></div>
+                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px]"></div>
+                </div>
+
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="text-center max-w-3xl mx-auto">
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-indigo-800 to-slate-900 dark:from-white dark:via-indigo-300 dark:to-white mb-8 animate-gradient-x">
+                            What is SolveSphere?
+                        </h2>
+                        <div className="max-w-4xl mx-auto mb-16 p-8 rounded-2xl bg-white/50 dark:bg-slate-800/30 backdrop-blur-md border border-slate-200/50 dark:border-white/10 shadow-lg relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <p className="text-lg md:text-xl text-slate-700 dark:text-slate-300 leading-relaxed font-light relative z-10">
+                                SolveSphere is an all-in-one community engagement platform designed to bridge the gap between organizations and their members.
+                                Whether you are a game developer, a university, or a service provider, SolveSphere allows you to create your own dedicated space
+                                where users can report issues, discuss topics, read news, and chat directly with you.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {[
+                                {
+                                    title: "Community First",
+                                    description: "Build a thriving community with dedicated forums and real-time chat.",
+                                    icon: (
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                    ),
+                                    gradient: "from-blue-500 to-indigo-600",
+                                    glow: "group-hover:shadow-indigo-500/40",
+                                    border: "group-hover:border-indigo-500/50"
+                                },
+                                {
+                                    title: "Feedback Loop",
+                                    description: "Streamlined reporting system to track bugs and gather user feedback effectively.",
+                                    icon: (
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    ),
+                                    gradient: "from-purple-500 to-pink-600",
+                                    glow: "group-hover:shadow-purple-500/40",
+                                    border: "group-hover:border-purple-500/50"
+                                },
+                                {
+                                    title: "Announcements",
+                                    description: "Keep your users informed with a dedicated news and announcement feed.",
+                                    icon: (
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                                        </svg>
+                                    ),
+                                    gradient: "from-orange-500 to-red-600",
+                                    glow: "group-hover:shadow-orange-500/40",
+                                    border: "group-hover:border-orange-500/50"
+                                }
+                            ].map((feature, idx) => (
+                                <motion.div
+                                    key={idx}
+                                    whileHover={{ y: -5 }}
+                                    className={`p-8 rounded-2xl bg-white/80 dark:bg-slate-800/40 backdrop-blur-md shadow-xl dark:shadow-2xl border border-white/20 dark:border-white/10 relative overflow-hidden group transition-all duration-300 ${feature.glow} ${feature.border}`}
+                                >
+                                    {/* Gradient Border Line */}
+                                    <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${feature.gradient} opacity-80`}></div>
+
+                                    {/* Shine Effect */}
+                                    <div className="absolute inset-0 -translate-x-full group-hover:animate-[shine_1s_ease-in-out] bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12"></div>
+
+                                    <div className={`h-14 w-14 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6 shadow-lg shadow-black/5 transform group-hover:scale-110 transition-transform duration-300 relative z-10`}>
+                                        {feature.icon}
+                                    </div>
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3 relative z-10">{feature.title}</h3>
+                                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-light relative z-10">
+                                        {feature.description}
+                                    </p>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -121,31 +207,53 @@ export default function LandingPage() {
                                         transition={{ duration: 0.5, delay: index * 0.1 }}
                                     >
                                         <Link to={`/partners/${partner.slug}`} className="block h-full">
-                                            <Card className="h-full hover:shadow-xl transition-all duration-300 border-t-4 border-t-indigo-500 group glass-card">
-                                                <div className="p-6 flex flex-col items-center text-center h-full">
-                                                    <div className="h-20 w-20 rounded-full bg-slate-100 dark:bg-slate-700 mb-4 overflow-hidden shadow-inner group-hover:scale-110 transition-transform duration-300">
-                                                        {partner.logo ? (
-                                                            <img src={partner.logo} alt={partner.name} className="h-full w-full object-cover" />
-                                                        ) : (
-                                                            <div className="h-full w-full flex items-center justify-center text-2xl font-bold text-slate-400 dark:text-slate-500">
-                                                                {partner.name.charAt(0)}
-                                                            </div>
-                                                        )}
+                                            <Card className="h-full hover:shadow-xl transition-all duration-300 border-none overflow-hidden group glass-card relative flex flex-col">
+                                                {/* Banner */}
+                                                <div className="h-48 w-full bg-slate-200 dark:bg-slate-700 relative overflow-hidden">
+                                                    {partner.banner ? (
+                                                        <img
+                                                            src={partner.banner}
+                                                            alt={`${partner.name} banner`}
+                                                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                        />
+                                                    ) : (
+                                                        <div className="h-full w-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-transform duration-500 group-hover:scale-110"></div>
+                                                    )}
+                                                    {/* Gradient Overlay */}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-80 transition-opacity"></div>
+                                                </div>
+
+                                                <div className="px-6 pb-6 pt-0 flex flex-col items-center text-center flex-grow -mt-10 relative z-10">
+                                                    {/* Logo */}
+                                                    <div className="h-20 w-20 rounded-full bg-white dark:bg-slate-800 p-1 mb-3 shadow-lg group-hover:scale-105 transition-transform duration-300">
+                                                        <div className="h-full w-full rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700">
+                                                            {partner.logo ? (
+                                                                <img src={partner.logo} alt={partner.name} className="h-full w-full object-cover" />
+                                                            ) : (
+                                                                <div className="h-full w-full flex items-center justify-center text-2xl font-bold text-slate-400 dark:text-slate-500">
+                                                                    {partner.name.charAt(0)}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{partner.name}</h3>
+
+                                                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{partner.name}</h3>
 
                                                     {/* Rating Display */}
                                                     <div className="flex items-center gap-1 mb-3">
                                                         <Star className="w-4 h-4 text-yellow-400 fill-current" />
                                                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                                            {partner.average_rating ? Number(partner.average_rating).toFixed(1) : 'New'}
+                                                            {partner.ratings_avg_rating ? Number(partner.ratings_avg_rating).toFixed(1) : 'New'}
                                                         </span>
                                                         <span className="text-xs text-slate-500">({partner.ratings_count || 0})</span>
                                                     </div>
 
-                                                    <p className="text-slate-600 dark:text-slate-300 text-sm mb-4 flex-grow">{partner.description}</p>
-                                                    <div className="flex items-center text-indigo-600 dark:text-indigo-400 font-medium text-sm mt-auto">
-                                                        Visit Community <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                                    <p className="text-slate-600 dark:text-slate-300 text-sm mb-4 line-clamp-2">{partner.description}</p>
+
+                                                    <div className="mt-auto pt-4 w-full border-t border-slate-100 dark:border-slate-700/50">
+                                                        <div className="flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-medium text-sm">
+                                                            Visit Community <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </Card>

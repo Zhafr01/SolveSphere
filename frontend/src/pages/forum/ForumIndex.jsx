@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Plus, Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Pagination from '../../components/Pagination';
+import PageLoader from '../../components/ui/PageLoader';
 
 export default function ForumIndex() {
     const [topics, setTopics] = useState([]);
@@ -60,10 +61,10 @@ export default function ForumIndex() {
         }
     };
 
-    if (loading) return <div>Loading forum topics...</div>;
+    if (loading) return <PageLoader message="Loading forum topics..." />;
 
     return (
-        <div className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300">
+        <div className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300 max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Forum</h1>
                 <div className="flex items-center gap-4">
@@ -84,7 +85,7 @@ export default function ForumIndex() {
                             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
                         </div>
                     </motion.div>
-                    <Link to="/forum/create" className="btn-primary flex items-center gap-2">
+                    <Link to={slug ? `/partners/${slug}/forum/create` : "/forum/create"} className="btn-primary flex items-center gap-2">
                         <Plus className="h-4 w-4" />
                         New Topic
                     </Link>
@@ -108,7 +109,7 @@ export default function ForumIndex() {
                             >
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <Link to={`/forum/${topic.id}`} className="text-lg font-semibold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                        <Link to={slug ? `/partners/${slug}/forum/${topic.id}` : `/forum/${topic.id}`} className="text-lg font-semibold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                                             {topic.title}
                                         </Link>
                                         <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
@@ -119,7 +120,7 @@ export default function ForumIndex() {
                                         <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                                             {topic.category}
                                         </span>
-                                        {(user?.roles?.some(r => r.name === 'partner_admin' || r.name === 'super_admin') || user?.id === topic.user_id) && (
+                                        {(user?.role === 'super_admin' || (user?.role === 'partner_admin' && user?.partner_id === topic.partner_id) || user?.id === topic.user_id) && (
                                             <button
                                                 onClick={() => handleDelete(topic.id)}
                                                 className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm font-medium"

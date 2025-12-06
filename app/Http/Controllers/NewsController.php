@@ -139,8 +139,10 @@ class NewsController extends Controller
      *     )
      * )
      */
-    public function show(News $news)
+    public function show($id)
     {
+        // Bypass PartnerScope
+        $news = News::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
         // The PartnerScope already ensures the user can only access news from their tenancy.
         // No explicit authorization check is needed here for viewing.
         $news->load('admin');
@@ -185,8 +187,9 @@ class NewsController extends Controller
      *     )
      * )
      */
-    public function update(Request $request, News $news)
+    public function update(Request $request, $id)
     {
+        $news = News::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
         \Illuminate\Support\Facades\Gate::authorize('manage-news', $news);
 
         $request->validate([
@@ -239,8 +242,9 @@ class NewsController extends Controller
      *     )
      * )
      */
-    public function destroy(News $news)
+    public function destroy($id)
     {
+        $news = News::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
         \Illuminate\Support\Facades\Gate::authorize('manage-news', $news);
 
         if ($news->image) {
@@ -252,8 +256,9 @@ class NewsController extends Controller
         return response()->json(['message' => 'News deleted successfully']);
     }
 
-    public function like(News $news)
+    public function like($id)
     {
+        $news = News::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
         $user = Auth::user();
 
         $like = $news->likes()->where('user_id', $user->id)->first();
