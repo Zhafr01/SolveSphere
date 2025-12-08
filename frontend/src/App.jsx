@@ -52,6 +52,8 @@ import PartnerUsersIndex from './pages/admin/UsersIndex'; // Reusing UsersIndex 
 import LandingPage from './pages/LandingPage';
 import NotFound from './pages/NotFound';
 import AboutUs from './pages/AboutUs';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 
 const ProtectedRoute = ({ children, roles = [] }) => {
   const { user, isLoading } = useAuth();
@@ -76,11 +78,12 @@ function App() {
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/partners/:slug" element={<PartnerSite />} />
                   <Route path="/about-us" element={<AboutUs />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/terms-of-service" element={<TermsOfService />} />
                 </Route>
 
                 {/* Guest Routes */}
                 <Route element={<GuestLayout />}>
-                  <Route path="/login" element={<Login />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />

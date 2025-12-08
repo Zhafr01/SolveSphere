@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../lib/api';
+import { Check, X, Ban, Trash2, ExternalLink, Shield, ShieldAlert, Eye, Search, Filter } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PartnersIndex() {
+    const [searchParams] = useSearchParams();
     const [partners, setPartners] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('active');
+    const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'active');
+
+    useEffect(() => {
+        const tabParam = searchParams.get('tab');
+        if (tabParam && ['active', 'pending'].includes(tabParam)) {
+            setActiveTab(tabParam);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         fetchPartners();
@@ -93,201 +104,260 @@ export default function PartnersIndex() {
         activeTab === 'active' ? (partner.status === 'active' || partner.status === 'approved' || partner.status === 'inactive') : partner.status === 'pending'
     );
 
-    if (loading) return <div>Loading partners...</div>;
+    if (loading) return (
+        <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        </div>
+    );
 
     return (
-        <div className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Manage Partners</h1>
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-7xl mx-auto space-y-8"
+        >
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-4xl font-black bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow-lg">
+                        Manage Partners
+                    </h1>
+                    <p className="text-slate-600 dark:text-slate-300 mt-2 text-lg font-medium">
+                        Oversee partner applications and manage active partnerships.
+                    </p>
+                </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex space-x-4 border-b border-gray-200 dark:border-slate-700 mb-6">
-                <button
-                    className={`pb-2 px-4 font-medium text-sm transition-colors ${activeTab === 'active' ? 'border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}`}
-                    onClick={() => setActiveTab('active')}
-                >
-                    Active Partners
-                </button>
-                <button
-                    className={`pb-2 px-4 font-medium text-sm transition-colors ${activeTab === 'pending' ? 'border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}`}
-                    onClick={() => setActiveTab('pending')}
-                >
-                    Pending Applications
-                    {partners.filter(p => p.status === 'pending').length > 0 && (
-                        <span className="ml-2 bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs">
-                            {partners.filter(p => p.status === 'pending').length}
-                        </span>
-                    )}
-                </button>
-            </div>
+            <div className="glass-panel p-8 backdrop-blur-xl bg-white/40 dark:bg-slate-900/40 border border-white/20 dark:border-white/10 shadow-2xl rounded-3xl">
+                {/* Modern Tabs */}
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+                    <div className="bg-slate-100/50 dark:bg-slate-800/50 p-1.5 rounded-2xl inline-flex w-full sm:w-auto backdrop-blur-md border border-white/20 dark:border-white/5">
+                        <button
+                            onClick={() => setActiveTab('active')}
+                            className={`flex-1 sm:flex-none px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'active'
+                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-lg scale-105'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                                }`}
+                        >
+                            Active Partners
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('pending')}
+                            className={`flex-1 sm:flex-none px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'pending'
+                                ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-lg scale-105'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                                }`}
+                        >
+                            Pending
+                            {partners.filter(p => p.status === 'pending').length > 0 && (
+                                <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-red-500/50 shadow-sm animate-pulse">
+                                    {partners.filter(p => p.status === 'pending').length}
+                                </span>
+                            )}
+                        </button>
+                    </div>
+                </div>
 
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-                    <thead className="bg-slate-50 dark:bg-slate-700/50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Logo</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Domain</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Subscription</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
-                        {filteredPartners.length > 0 ? (
-                            filteredPartners.map((partner) => (
-                                <tr key={partner.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {partner.logo && (
-                                            <img
-                                                src={partner.logo.startsWith('http') ? partner.logo : `http://localhost:8000/storage/${partner.logo}`}
-                                                alt={partner.name}
-                                                className="h-10 w-10 rounded-full object-cover"
-                                            />
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{partner.name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">{partner.domain}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            ${(partner.status === 'active' || partner.status === 'approved') ? 'bg-green-100 text-green-800' :
-                                                partner.status === 'inactive' ? 'bg-orange-100 text-orange-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                            {partner.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {partner.latest_subscription ? (
-                                            <div className="flex flex-col space-y-2">
-                                                <div className="flex items-center space-x-2">
-                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                        ${partner.latest_subscription.status === 'active' ? 'bg-green-100 text-green-800' :
-                                                            partner.latest_subscription.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-                                                        {partner.latest_subscription.status}
-                                                    </span>
-                                                    {partner.latest_subscription.proof_image && (
-                                                        <button
-                                                            onClick={() => setSelectedImage(`http://localhost:8000/storage/${partner.latest_subscription.proof_image}`)}
-                                                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs hover:underline flex items-center"
-                                                        >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg>
-                                                            View Proof
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                {partner.latest_subscription.status === 'pending' && (
-                                                    <div className="flex space-x-2">
-                                                        <button
-                                                            onClick={() => handleSubscriptionUpdate(partner.id, 'active')}
-                                                            className="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded border border-green-200 dark:border-green-800 text-xs hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
-                                                        >
-                                                            Approve
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleSubscriptionUpdate(partner.id, 'rejected')}
-                                                            className="bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-1 rounded border border-red-200 dark:border-red-800 text-xs hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
-                                                        >
-                                                            Reject
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <span className="text-gray-400 text-xs">No Record</span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                        {partner.status === 'pending' && (
-                                            <>
-                                                <button
-                                                    onClick={() => handleApprove(partner.id)}
-                                                    className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
-                                                >
-                                                    Approve
-                                                </button>
-                                                <button
-                                                    onClick={() => handleReject(partner.id)}
-                                                    className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-                                                >
-                                                    Reject
-                                                </button>
-                                            </>
-                                        )}
-                                        {(partner.status === 'active' || partner.status === 'approved') && (
-                                            <>
-                                                {partner.website && (
-                                                    <a
-                                                        href={partner.website}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
-                                                    >
-                                                        Visit
-                                                    </a>
-                                                )}
-                                                <button
-                                                    onClick={() => handleSuspend(partner.id)}
-                                                    className="text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300"
-                                                >
-                                                    Suspend
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(partner.id)}
-                                                    className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </>
-                                        )}
-                                        {/* Show activate button if inactive */}
-                                        {partner.status === 'inactive' && (
-                                            <>
-                                                <button
-                                                    onClick={() => handleActivate(partner.id)}
-                                                    className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
-                                                >
-                                                    Activate
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(partner.id)}
-                                                    className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </>
-                                        )}
-                                    </td>
+                {/* Glass Table */}
+                <div className="overflow-hidden rounded-2xl border border-white/20 dark:border-white/10 shadow-inner bg-white/5 dark:bg-slate-900/20 backdrop-blur-sm">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-white/10 dark:divide-white/5">
+                            <thead className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10">
+                                <tr>
+                                    <th className="px-6 py-5 text-left text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">Partner</th>
+                                    <th className="px-6 py-5 text-left text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-5 text-left text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">Subscription</th>
+                                    <th className="px-6 py-5 text-right text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">Actions</th>
                                 </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-slate-400">No partners found in this category.</td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100/10 dark:divide-white/5">
+                                <AnimatePresence mode="popLayout">
+                                    {filteredPartners.length > 0 ? (
+                                        filteredPartners.map((partner, index) => (
+                                            <motion.tr
+                                                key={partner.id}
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 20 }}
+                                                transition={{ delay: index * 0.05 }}
+                                                className="group hover:bg-white/40 dark:hover:bg-indigo-900/20 transition-all duration-300"
+                                            >
+                                                <td className="px-6 py-5">
+                                                    <div className="flex items-center">
+                                                        <div className="flex-shrink-0 h-14 w-14 relative group-hover:scale-110 transition-transform duration-300">
+                                                            {partner.logo ? (
+                                                                <img
+                                                                    className="h-14 w-14 rounded-2xl object-cover ring-2 ring-white/50 dark:ring-white/10 shadow-lg"
+                                                                    src={partner.logo.startsWith('http') ? partner.logo : `http://localhost:8000/storage/${partner.logo}`}
+                                                                    alt=""
+                                                                />
+                                                            ) : (
+                                                                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shadow-lg ring-2 ring-white/20">
+                                                                    {partner.name.charAt(0)}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="ml-4">
+                                                            <div className="text-base font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-amber-400 transition-colors">
+                                                                {partner.name}
+                                                            </div>
+                                                            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5 font-medium">
+                                                                {partner.domain}
+                                                                {partner.website && (
+                                                                    <a href={partner.website} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-600 p-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded">
+                                                                        <ExternalLink className="w-3 h-3" />
+                                                                    </a>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5 whitespace-nowrap">
+                                                    <span className={`px-4 py-1.5 inline-flex text-xs leading-5 font-bold rounded-full border shadow-sm ${partner.status === 'active' || partner.status === 'approved'
+                                                        ? 'bg-emerald-100/50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 dark:shadow-emerald-500/10'
+                                                        : partner.status === 'pending'
+                                                            ? 'bg-amber-100/50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30 dark:shadow-amber-500/10'
+                                                            : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600'
+                                                        }`}>
+                                                        {partner.status.toUpperCase()}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-5 whitespace-nowrap">
+                                                    {partner.latest_subscription ? (
+                                                        <div className="flex flex-col gap-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${partner.latest_subscription.status === 'active'
+                                                                    ? 'bg-blue-100/50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/30'
+                                                                    : 'bg-slate-100/50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                                                                    }`}>
+                                                                    {partner.latest_subscription.status.toUpperCase()}
+                                                                </span>
+                                                                {partner.latest_subscription.proof_image && (
+                                                                    <button
+                                                                        onClick={() => setSelectedImage(`http://localhost:8000/storage/${partner.latest_subscription.proof_image}`)}
+                                                                        className="p-1.5 rounded-full bg-white/50 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-indigo-900/30 text-indigo-500 transition-colors shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
+                                                                        title="View Proof"
+                                                                    >
+                                                                        <Eye className="w-4 h-4" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                            {partner.latest_subscription.status === 'pending' && (
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <button
+                                                                        onClick={() => handleSubscriptionUpdate(partner.id, 'active')}
+                                                                        className="p-1.5 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-500/30 transition-colors ring-1 ring-emerald-200 dark:ring-emerald-500/30"
+                                                                        title="Approve Subscription"
+                                                                    >
+                                                                        <Check className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleSubscriptionUpdate(partner.id, 'rejected')}
+                                                                        className="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/30 transition-colors ring-1 ring-red-200 dark:ring-red-500/30"
+                                                                        title="Reject Subscription"
+                                                                    >
+                                                                        <X className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400 font-medium italic opacity-70">No Subscription</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
+                                                    <div className="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                                                        {partner.status === 'pending' && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleApprove(partner.id)}
+                                                                    className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 active:scale-95 transition-all duration-200"
+                                                                    title="Approve Partner"
+                                                                >
+                                                                    <Check className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleReject(partner.id)}
+                                                                    className="p-2.5 rounded-xl bg-gradient-to-br from-red-500 to-pink-500 text-white shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:scale-105 active:scale-95 transition-all duration-200"
+                                                                    title="Reject Application"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        {(partner.status === 'active' || partner.status === 'approved') && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleSuspend(partner.id)}
+                                                                    className="p-2.5 rounded-xl bg-slate-100 text-amber-600 hover:bg-amber-100 dark:bg-slate-800 dark:text-amber-400 dark:hover:bg-amber-900/30 border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 active:scale-95 shadow-sm"
+                                                                    title="Suspend Partner"
+                                                                >
+                                                                    <Ban className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDelete(partner.id)}
+                                                                    className="p-2.5 rounded-xl bg-slate-100 text-red-600 hover:bg-red-50 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-red-900/30 border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 active:scale-95 shadow-sm"
+                                                                    title="Delete Partner"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        {partner.status === 'inactive' && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleActivate(partner.id)}
+                                                                    className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105 active:scale-95 transition-all duration-200"
+                                                                    title="Reactivate Partner"
+                                                                >
+                                                                    <Shield className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDelete(partner.id)}
+                                                                    className="p-2.5 rounded-xl bg-slate-100 text-red-600 hover:bg-red-50 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-red-900/30 border border-slate-200 dark:border-slate-700 transition-all hover:scale-105 active:scale-95 shadow-sm"
+                                                                    title="Delete Partner"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4" className="px-6 py-20 text-center">
+                                                <div className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 opacity-60">
+                                                    <div className="bg-slate-100/50 dark:bg-slate-800/50 p-6 rounded-full mb-4 shadow-inner">
+                                                        <Search className="w-10 h-10" />
+                                                    </div>
+                                                    <p className="text-xl font-bold">No partners found</p>
+                                                    <p className="text-sm mt-1">Try changing the tab or check back later.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </AnimatePresence>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             {/* Image Modal */}
-            {
-                selectedImage && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4" onClick={() => setSelectedImage(null)}>
-                        <div className="relative max-w-4xl max-h-full bg-white rounded-lg overflow-hidden shadow-xl" onClick={e => e.stopPropagation()}>
-                            <button
-                                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1"
-                                onClick={() => setSelectedImage(null)}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                            <img src={selectedImage} alt="Payment Proof" className="max-w-full max-h-[80vh] object-contain" />
-                        </div>
+            {selectedImage && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 animate-in fade-in duration-300" onClick={() => setSelectedImage(null)}>
+                    <div className="relative max-w-4xl max-h-full bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/20 transform animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+                        <button
+                            className="absolute top-4 right-4 text-white/70 hover:text-white bg-black/50 hover:bg-black/70 p-2 rounded-full transition-all duration-200 backdrop-blur-md z-10"
+                            onClick={() => setSelectedImage(null)}
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        <img src={selectedImage} alt="Payment Proof" className="max-w-full max-h-[85vh] object-contain" />
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+        </motion.div>
     );
 }

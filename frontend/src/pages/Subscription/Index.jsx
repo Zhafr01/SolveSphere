@@ -51,7 +51,7 @@ export default function Index() {
                     'Content-Type': 'multipart/form-data',
                 }
             });
-            setMessage({ type: 'success', text: 'Payment proof uploaded successfully.' });
+            setMessage({ type: 'success', text: 'Smooth Operation. Payment proof uploaded successfully.' });
             setSubscription(response.data.subscription);
             setProofImage(null);
             setPreview(null);
@@ -85,7 +85,9 @@ export default function Index() {
     return (
         <div className="space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Subscription Management</h1>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+                    Subscription Status <span className="text-sm font-normal text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-full ml-2">El Plan</span>
+                </h1>
             </div>
 
             {/* Status Card */}

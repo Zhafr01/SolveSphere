@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
-import { Plus, Search, Trash2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Search, Trash2, Loader2, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CustomSelect from '../../components/ui/CustomSelect';
 import Pagination from '../../components/Pagination';
@@ -17,23 +17,10 @@ export default function ReportsIndex() {
     const [categoryFilter, setCategoryFilter] = useState('');
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
-    const [expandedReportId, setExpandedReportId] = useState(null);
     const { user } = useAuth();
     const { slug } = useParams();
 
-    useEffect(() => {
-        setPage(1);
-    }, [searchQuery, statusFilter, urgencyFilter, categoryFilter]);
-
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            fetchReports(page);
-        }, 500);
-
-        return () => clearTimeout(delayDebounceFn);
-    }, [slug, user, searchQuery, statusFilter, urgencyFilter, categoryFilter, page]);
-
-    const fetchReports = async (pageNumber = 1) => {
+    const fetchReports = useCallback(async (pageNumber = 1) => {
         try {
             const params = {};
             if (slug) {
@@ -56,7 +43,19 @@ export default function ReportsIndex() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [slug, user, searchQuery, statusFilter, urgencyFilter, categoryFilter]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [searchQuery, statusFilter, urgencyFilter, categoryFilter]);
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            fetchReports(page);
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [fetchReports, page]);
 
     const handleStatusChange = async (id, newStatus) => {
         try {
@@ -78,9 +77,7 @@ export default function ReportsIndex() {
         }
     };
 
-    const toggleExpand = (id) => {
-        setExpandedReportId(expandedReportId === id ? null : id);
-    };
+
 
     if (loading) return <PageLoader message="Loading reports..." />;
 
@@ -88,186 +85,228 @@ export default function ReportsIndex() {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 transition-colors duration-300 max-w-7xl mx-auto"
+            className="space-y-8 max-w-7xl mx-auto"
         >
-            <div className="flex flex-col gap-6 mb-8">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Reports</h1>
-                </div>
+            <div className="glass-panel p-8 backdrop-blur-xl bg-white/40 dark:bg-slate-900/40 border border-white/20 dark:border-white/10 shadow-2xl rounded-3xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-32 bg-indigo-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
 
-                {/* Search Bar - Full Width */}
-                <div className="w-full relative">
-                    <input
-                        type="text"
-                        placeholder="Search reports..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 transition-all shadow-sm"
-                    />
-                    <div className="absolute left-3 top-3.5 text-gray-400">
-                        {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
-                    </div>
-                </div>
-
-                {/* Filters and Action Button Row */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex flex-wrap gap-4 w-full md:w-auto">
-                        <div className="w-full md:w-40">
-                            <CustomSelect
-                                value={statusFilter}
-                                onChange={setStatusFilter}
-                                options={[
-                                    { value: "", label: "All Status" },
-                                    { value: "pending", label: "Pending" },
-                                    { value: "in_progress", label: "In Progress" },
-                                    { value: "resolved", label: "Resolved" },
-                                ]}
-                                placeholder="Status"
-                            />
+                <div className="flex flex-col gap-8 mb-8 relative z-10">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Reports Management</h1>
+                            <p className="text-slate-500 dark:text-slate-400 mt-1">Manage and track issues across the platform.</p>
                         </div>
-
-                        <div className="w-full md:w-40">
-                            <CustomSelect
-                                value={urgencyFilter}
-                                onChange={setUrgencyFilter}
-                                options={[
-                                    { value: "", label: "All Urgency" },
-                                    { value: "Low", label: "Low" },
-                                    { value: "Medium", label: "Medium" },
-                                    { value: "High", label: "High" },
-                                    { value: "Critical", label: "Critical" },
-                                ]}
-                                placeholder="Urgency"
-                            />
-                        </div>
-
-                        <div className="w-full md:w-44">
-                            <CustomSelect
-                                value={categoryFilter}
-                                onChange={setCategoryFilter}
-                                options={[
-                                    { value: "", label: "All Categories" },
-                                    { value: "General", label: "General" },
-                                    { value: "Infrastructure", label: "Infrastructure" },
-                                    { value: "Academic", label: "Academic" },
-                                    { value: "Administrative", label: "Administrative" },
-                                ]}
-                                placeholder="Category"
-                            />
-                        </div>
-                    </div>
-
-                    {(!['super_admin', 'partner_admin'].includes(user?.role) || (user?.role === 'super_admin' && slug)) && (
-                        <Link to={slug ? `/partners/${slug}/reports/create` : "/reports/create"} className="btn-primary flex items-center gap-2 whitespace-nowrap">
-                            <Plus className="h-4 w-4" />
-                            New Report
-                        </Link>
-                    )}
-                </div>
-            </div>
-
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-                    <thead className="bg-gray-50 dark:bg-slate-700/50">
-                        <tr>
-
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Partner</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Urgency</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
-                        {reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
-                            reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map((report) => (
-                                <>
-                                    <tr key={report.id} className={`transition-colors ${expandedReportId === report.id ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : 'hover:bg-gray-50 dark:hover:bg-slate-700/50'}`}>
-
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{report.title}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">
-                                            {report.partner ? (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
-                                                    {report.partner.name}
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-slate-300">
-                                                    Global
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">{report.category}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            ${report.urgency === 'Critical' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
-                                                    report.urgency === 'High' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300' :
-                                                        report.urgency === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
-                                                            'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'}`}>
-                                                {report.urgency}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {((user?.role === 'super_admin' && !slug) || user?.role === 'partner_admin') ? (
-                                                <select
-                                                    value={report.status}
-                                                    onChange={(e) => handleStatusChange(report.id, e.target.value)}
-                                                    className={`text-xs font-semibold rounded-full px-2 py-1 border-none focus:ring-0 cursor-pointer
-                                                    ${report.status === 'resolved' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-                                                            report.status === 'in_progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' :
-                                                                'bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-slate-300'}`}
-                                                >
-                                                    <option value="pending">Pending</option>
-                                                    <option value="in_progress">In Progress</option>
-                                                    <option value="resolved">Resolved</option>
-                                                </select>
-                                            ) : (
-                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                ${report.status === 'resolved' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-                                                        report.status === 'in_progress' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' :
-                                                            'bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-slate-300'}`}>
-                                                    {report.status}
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">
-                                            {new Date(report.created_at).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <div className="flex items-center gap-3">
-                                                <Link
-                                                    to={slug ? `/partners/${slug}/reports/${report.id}` : `/reports/${report.id}`}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
-                                                >
-                                                    View
-                                                </Link>
-                                                {(user?.id === report.user_id || (user?.role === 'super_admin' && !slug) || (user?.role === 'partner_admin' && user?.partner_id === report.partner_id)) && (
-                                                    <button
-                                                        onClick={() => handleDelete(report.id)}
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
-                                                        title="Delete Report"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                        <span className="hidden sm:inline">Delete</span>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                </>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="8" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-slate-400">No reports found.</td>
-                            </tr>
+                        {(!['super_admin', 'partner_admin'].includes(user?.role) || (user?.role === 'super_admin' && slug)) && (
+                            <Link
+                                to={slug ? `/partners/${slug}/reports/create` : "/reports/create"}
+                                className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl transition-all font-bold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-1"
+                            >
+                                <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform" />
+                                New Report
+                            </Link>
                         )}
-                    </tbody>
-                </table>
-            </div>
+                    </div>
 
-            <Pagination links={meta.links} onPageChange={setPage} />
+                    {/* Search Bar - Full Width with Glass Effect */}
+                    <div className="w-full relative group">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            {loading ? <Loader2 className="h-5 w-5 animate-spin text-indigo-500" /> : <Search className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />}
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search reports by title..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-12 pr-4 py-4 bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all backdrop-blur-sm shadow-sm hover:shadow-md"
+                        />
+                    </div>
+
+                    {/* Filters and Action Button Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <CustomSelect
+                            value={statusFilter}
+                            onChange={setStatusFilter}
+                            options={[
+                                { value: "", label: "All Status" },
+                                { value: "pending", label: "Pending" },
+                                { value: "in_progress", label: "In Progress" },
+                                { value: "resolved", label: "Resolved" },
+                            ]}
+                            placeholder="Filter by Status"
+                            className="h-12"
+                        />
+                        <CustomSelect
+                            value={urgencyFilter}
+                            onChange={setUrgencyFilter}
+                            options={[
+                                { value: "", label: "All Urgency" },
+                                { value: "Low", label: "Low" },
+                                { value: "Medium", label: "Medium" },
+                                { value: "High", label: "High" },
+                                { value: "Critical", label: "Critical" },
+                            ]}
+                            placeholder="Filter by Urgency"
+                            className="h-12"
+                        />
+                        <CustomSelect
+                            value={categoryFilter}
+                            onChange={setCategoryFilter}
+                            options={[
+                                { value: "", label: "All Categories" },
+                                { value: "General", label: "General" },
+                                { value: "Infrastructure", label: "Infrastructure" },
+                                { value: "Academic", label: "Academic" },
+                                { value: "Administrative", label: "Administrative" },
+                            ]}
+                            placeholder="Filter by Category"
+                            className="h-12"
+                        />
+                    </div>
+                </div>
+
+                <div className="overflow-hidden rounded-2xl border border-white/20 dark:border-white/5 shadow-inner bg-white/50 dark:bg-slate-900/50 backdrop-blur-md">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200/50 dark:divide-white/5">
+                            <thead className="bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5">
+                                <tr>
+                                    <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Title</th>
+                                    <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Partner</th>
+                                    <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</th>
+                                    <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Urgency</th>
+                                    <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
+                                    <th className="px-6 py-5 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-white/5">
+                                <AnimatePresence mode="popLayout">
+                                    {reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 ? (
+                                        reports.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map((report, index) => (
+                                            <motion.tr
+                                                key={report.id}
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 20 }}
+                                                transition={{ delay: index * 0.05 }}
+                                                className={`group transition-all duration-200 hover:bg-white/60 dark:hover:bg-slate-800/60`}
+                                            >
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{report.title}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+                                                    {report.partner ? (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                                                            {report.partner.name}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1.5 opacity-60">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                                                            Global
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                                        {report.category}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                    <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full uppercase tracking-wide border shadow-sm
+                                                    ${report.urgency === 'Critical' ? 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-900/50' :
+                                                            report.urgency === 'High' ? 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-900/50' :
+                                                                report.urgency === 'Medium' ? 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/50' :
+                                                                    'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50'}`}>
+                                                        {report.urgency}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                                    {((user?.role === 'super_admin' && !slug) || user?.role === 'partner_admin') ? (
+                                                        <div className="relative">
+                                                            <select
+                                                                value={report.status}
+                                                                onChange={(e) => handleStatusChange(report.id, e.target.value)}
+                                                                className={`appearance-none pl-3 pr-8 py-1 text-xs font-bold rounded-full border-0 focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-sm transition-all
+                                                                ${report.status === 'resolved' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                                                        report.status === 'in_progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                                            'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'}`}
+                                                            >
+                                                                <option value="pending">Pending</option>
+                                                                <option value="in_progress">In Progress</option>
+                                                                <option value="resolved">Resolved</option>
+                                                            </select>
+                                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-current opacity-50">
+                                                                <ChevronDown className="h-3 w-3" />
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full uppercase tracking-wide border shadow-sm
+                                                        ${report.status === 'resolved' ? 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50' :
+                                                                report.status === 'in_progress' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/50' :
+                                                                    'bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600'}`}>
+                                                            {report.status.replace('_', ' ')}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                    {new Date(report.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Link
+                                                            to={slug ? `/partners/${slug}/reports/${report.id}` : `/reports/${report.id}`}
+                                                            className="p-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400 dark:hover:bg-indigo-900/40 transition-colors border border-indigo-200 dark:border-indigo-500/30 shadow-sm"
+                                                            title="View Details"
+                                                        >
+                                                            <Search className="h-4 w-4" />
+                                                        </Link>
+                                                        {(user?.id === report.user_id || (user?.role === 'super_admin' && !slug) || (user?.role === 'partner_admin' && user?.partner_id === report.partner_id)) && (
+                                                            <button
+                                                                onClick={() => handleDelete(report.id)}
+                                                                className="p-2 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:hover:bg-rose-900/40 transition-colors border border-rose-200 dark:border-rose-500/30 shadow-sm"
+                                                                title="Delete Report"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        ))
+                                    ) : (
+                                        <motion.tr
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                        >
+                                            <td colSpan="8" className="px-6 py-12 text-center">
+                                                <div className="flex flex-col items-center justify-center">
+                                                    <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+                                                        <Search className="h-8 w-8 text-slate-400" />
+                                                    </div>
+                                                    <h3 className="text-lg font-medium text-slate-900 dark:text-white">No reports found</h3>
+                                                    <p className="text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
+                                                        We couldn't find any reports matching your search or filters.
+                                                    </p>
+                                                    <button
+                                                        onClick={() => { setSearchQuery(''); setStatusFilter(''); setUrgencyFilter(''); setCategoryFilter(''); }}
+                                                        className="mt-4 text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                                                    >
+                                                        Clear all filters
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                    )}
+                                </AnimatePresence>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div className="glass-panel p-4 rounded-2xl border border-white/20 dark:border-white/5 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
+                    <Pagination links={meta.links} onPageChange={setPage} />
+                </div>
+            </div>
         </motion.div>
     );
 }

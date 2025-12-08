@@ -69,7 +69,7 @@ export default function CreateReport() {
 
     return (
         <div className="max-w-2xl mx-auto">
-            <Card className="bg-white dark:bg-slate-800 transition-colors duration-300 overflow-visible">
+            <Card className="transition-colors duration-300 overflow-visible">
                 <CardHeader>
                     <CardTitle className="text-gray-900 dark:text-white">Submit a New Report</CardTitle>
                 </CardHeader>
@@ -88,7 +88,7 @@ export default function CreateReport() {
                                 name="title"
                                 value={formData.title}
                                 onChange={handleChange}
-                                className="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                className="input-field w-full"
                                 required
                                 placeholder="Brief summary of the issue"
                             />
@@ -158,7 +158,7 @@ export default function CreateReport() {
                                 value={formData.content}
                                 onChange={handleChange}
                                 rows="5"
-                                className="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                className="input-field w-full"
                                 required
                                 placeholder="Detailed description of the problem..."
                             ></textarea>

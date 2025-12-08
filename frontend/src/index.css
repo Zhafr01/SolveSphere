@@ -17,44 +17,33 @@
 
   body {
     @apply bg-slate-50 text-slate-900 antialiased transition-colors duration-300;
-    background-image:
-      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.08) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(34, 211, 238, 0.08) 0px, transparent 50%);
-    background-attachment: fixed;
   }
 
   html.dark body {
     @apply bg-slate-950 text-slate-100;
-    background-image:
-      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(34, 211, 238, 0.15) 0px, transparent 50%);
   }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-white/80 backdrop-blur-xl border border-white/60 shadow-lg transition-colors duration-300;
+    @apply bg-white/80 backdrop-blur-xl border border-white/60 shadow-lg transition-all duration-300 rounded-3xl;
   }
 
   .dark .glass-panel {
-    @apply bg-slate-900/70 border-slate-700/50 shadow-slate-900/20;
+    @apply bg-slate-900/60 border-slate-700/50 shadow-slate-900/30;
   }
 
   .glass-card {
-    @apply relative overflow-hidden bg-white/70 backdrop-blur-md border border-white/50 shadow-sm rounded-2xl transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+    @apply relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/50 shadow-lg rounded-3xl transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1;
   }
 
   .dark .glass-card {
-    @apply bg-slate-800/60 border-slate-700/50 shadow-slate-900/20 hover:shadow-slate-900/30;
+    @apply bg-slate-800/60 border-slate-700/50 shadow-slate-900/30 hover:shadow-indigo-500/10;
   }
 
   .glass-card::before {
     content: '';
-    @apply absolute inset-0 bg-gradient-to-br from-white/60 to-transparent opacity-0 transition-opacity duration-300 pointer-events-none;
+    @apply absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-0 transition-opacity duration-300 pointer-events-none;
   }
 
   .dark .glass-card::before {
@@ -78,11 +67,11 @@
   }
 
   .input-field {
-    @apply w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200/50 outline-none transition-all duration-200 bg-white/80 backdrop-blur-sm placeholder:text-slate-400 text-slate-900;
+    @apply w-full px-5 py-3 rounded-2xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 bg-white/50 backdrop-blur-sm placeholder:text-slate-400 text-slate-900 shadow-sm;
   }
 
   .dark .input-field {
-    @apply border-slate-700 bg-slate-800/50 text-slate-100 placeholder:text-slate-500 focus:ring-indigo-500/20;
+    @apply border-slate-600 bg-slate-800/50 text-white placeholder:text-slate-500 focus:ring-indigo-500/20 focus:border-indigo-500;
   }
 
   .shine-effect {
@@ -141,6 +130,14 @@
 
 .animate-blob {
   animation: blob 7s infinite;
+}
+
+.bg-grid-white {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(255 255 255 / 0.04)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
+}
+
+.bg-grid-slate-900 {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(15 23 42 / 0.04)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
 }
 
 .animation-delay-2000 {

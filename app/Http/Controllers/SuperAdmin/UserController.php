@@ -44,7 +44,7 @@ class UserController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->paginate(100);
+        $users = $query->paginate(10);
 
         return response()->json($users);
     }
@@ -134,5 +134,55 @@ class UserController extends Controller
         $user->update(['status' => 'banned']);
 
         return response()->json(['message' => 'User banned successfully']);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/super-admin/users/{id}/promote",
+     *     summary="Promote a user",
+     *     tags={"Super Admin"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="User promoted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     )
+     * )
+     */
+    public function promote($id)
+    {
+        $user = User::withoutGlobalScope(\App\Scopes\PartnerScope::class)->findOrFail($id);
+
+        if ($user->role === 'super_admin') {
+             return response()->json(['message' => 'User is already a Super Admin'], 422);
+        }
+
+        if ($user->role === 'partner_admin') {
+            // Promote Partner Admin to Super Admin (Global)
+            $user->update(['role' => 'super_admin', 'partner_id' => null]);
+            return response()->json(['message' => 'User promoted to Super Admin successfully']);
+        }
+
+        if ($user->role === 'general_user') {
+            if ($user->partner_id) {
+                // Promote Partner User to Partner Admin
+                $user->update(['role' => 'partner_admin']);
+                return response()->json(['message' => 'User promoted to Partner Admin successfully']);
+            } else {
+                // Promote Global User to Super Admin
+                $user->update(['role' => 'super_admin']);
+                return response()->json(['message' => 'User promoted to Super Admin successfully']);
+            }
+        }
+
+        return response()->json(['message' => 'User promoted successfully']);
     }
 }

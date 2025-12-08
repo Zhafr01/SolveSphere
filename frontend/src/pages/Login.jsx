@@ -34,7 +34,11 @@ export default function Login() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            {error && <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium">{error}</div>}
+            {error && (
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium backdrop-blur-sm animate-in fade-in slide-in-from-top-2">
+                    {error}
+                </div>
+            )}
 
             <div>
                 <label className="block text-slate-700 dark:text-slate-200 text-sm font-semibold mb-2" htmlFor="email">
@@ -80,7 +84,7 @@ export default function Login() {
                     to="/forgot-password"
                     className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                 >
-                    Forgot your password?
+                    Bono, my password is gone!
                 </Link>
             </div>
 
@@ -94,9 +98,9 @@ export default function Login() {
             </div>
 
             <div className="text-center">
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                     Don't have an account?{' '}
-                    <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+                    <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
                         Register
                     </Link>
                 </p>

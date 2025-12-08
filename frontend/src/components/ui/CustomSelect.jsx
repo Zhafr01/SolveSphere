@@ -16,7 +16,7 @@ export default function CustomSelect({ value, onChange, options, label, placehol
             )}
             <Listbox value={value} onChange={onChange}>
                 <div className="relative mt-1">
-                    <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white dark:bg-slate-800 py-2.5 pl-4 pr-10 text-left border border-slate-200 dark:border-slate-700 focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-300 sm:text-sm transition-colors duration-200">
+                    <Listbox.Button className="input-field relative w-full cursor-default text-left pr-10">
                         <span className={`block truncate ${!selectedOption ? 'text-slate-400' : 'text-slate-900 dark:text-white'}`}>
                             {selectedOption ? selectedOption.label : placeholder}
                         </span>

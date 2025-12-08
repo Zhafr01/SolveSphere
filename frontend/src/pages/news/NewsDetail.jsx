@@ -70,7 +70,7 @@ export default function NewsDetail() {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"
+                className="glass-panel overflow-hidden"
             >
                 {news.image && (
                     <div className="w-full h-64 md:h-96 relative">

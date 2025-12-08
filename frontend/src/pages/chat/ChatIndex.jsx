@@ -16,6 +16,8 @@ export default function ChatIndex() {
     const [conversations, setConversations] = useState([]);
     const [activeChat, setActiveChat] = useState(null);
     const [messages, setMessages] = useState([]);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
@@ -60,18 +62,36 @@ export default function ChatIndex() {
 
     // Scroll to highlighted message
     // Scroll to highlighted message or bottom
+
+    // Scroll to highlighted message or bottom
     const scrollContainerRef = useRef(null);
     const isAtBottom = useRef(true);
     const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
 
-    // Handle scroll events to track if user is at bottom
+    // Handle scroll events to track if user is at bottom or top
     const handleScroll = () => {
         if (scrollContainerRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
             // Use a smaller threshold to avoid false positives when user scrolls up slightly
             const atBottom = scrollHeight - scrollTop - clientHeight < 50;
             isAtBottom.current = atBottom;
-            // console.log("Scroll:", { scrollTop, scrollHeight, clientHeight, atBottom });
+
+            // Fetch more messages if scrolled to top
+            if (scrollTop === 0 && !loadingMore && hasMore) {
+                const currentHeight = scrollHeight;
+                setLoadingMore(true);
+                fetchMessages(activeChat.id, false, page + 1).then(() => {
+                    // Restore scroll position after new messages loaded
+                    // We need to wait for DOM update
+                    setTimeout(() => {
+                        if (scrollContainerRef.current) {
+                            const newHeight = scrollContainerRef.current.scrollHeight;
+                            scrollContainerRef.current.scrollTop = newHeight - currentHeight;
+                        }
+                    }, 0);
+                });
+            }
         }
     };
 
@@ -90,11 +110,15 @@ export default function ChatIndex() {
         } else if (scrollContainerRef.current && !highlightedMessageId) {
             // Scroll if we are at bottom or if it's the first load/send (shouldScrollToBottom)
             if (isAtBottom.current || shouldScrollToBottom) {
-                const { scrollHeight, clientHeight } = scrollContainerRef.current;
-                scrollContainerRef.current.scrollTo({
-                    top: scrollHeight - clientHeight,
-                    behavior: 'smooth'
-                });
+                setTimeout(() => {
+                    if (scrollContainerRef.current) {
+                        const { scrollHeight, clientHeight } = scrollContainerRef.current;
+                        scrollContainerRef.current.scrollTo({
+                            top: scrollHeight - clientHeight,
+                            behavior: shouldScrollToBottom ? 'auto' : 'smooth'
+                        });
+                    }
+                }, 100);
                 if (shouldScrollToBottom) setShouldScrollToBottom(false);
             }
         }
@@ -106,6 +130,9 @@ export default function ChatIndex() {
         isAtBottom.current = true;
         setEditingMessageId(null);
         setNewMessage('');
+        setPage(1);
+        setHasMore(true);
+        setMessages([]); // Clear previous messages to avoid confusion
     }, [activeChat?.id]);
 
     useEffect(() => {
@@ -159,9 +186,9 @@ export default function ChatIndex() {
     useEffect(() => {
         if (activeChat) {
             fetchMessages(activeChat.id);
-            // Poll for new messages
+            // Poll for new messages (page 1 only)
             pollInterval.current = setInterval(() => {
-                fetchMessages(activeChat.id, true);
+                fetchMessages(activeChat.id, true, 1);
             }, 3000);
         }
 
@@ -189,26 +216,51 @@ export default function ChatIndex() {
         }
     };
 
-    const fetchMessages = async (otherUserId, isPolling = false) => {
+    const fetchMessages = async (otherUserId, isPolling = false, pageNum = 1) => {
         try {
-            const { data } = await api.get(`/chat/${otherUserId}`);
-            // Only update if there are new messages to avoid flicker or if not polling
-            setMessages(prev => {
-                // If polling, check if data is exactly the same
-                if (isPolling && JSON.stringify(prev) === JSON.stringify(data)) {
-                    return prev;
-                }
-                return data;
-            });
+            const { data } = await api.get(`/chat/${otherUserId}?page=${pageNum}`);
 
-            // Update unread count in conversation list locally
-            if (!isPolling) {
+            // Backend returns { data: [...], ...meta }
+            // Messages are desc (newest first).
+            const newMessages = data.data.reverse();
+
+            if (isPolling) {
+                // If polling, we only check page 1.
+                // We just want to append new messages if any.
+                // Or simply replace the last N messages if we want to update read status etc.
+                // For simplicity, let's just append any messages that are newer than our last one.
+                setMessages(prev => {
+                    if (prev.length === 0) return prev;
+                    const lastMsgId = prev[prev.length - 1].id;
+                    // Find messages in newMessages that are > lastMsgId
+                    const brandNew = newMessages.filter(m => m.id > lastMsgId);
+                    if (brandNew.length > 0) {
+                        return [...prev, ...brandNew];
+                    }
+                    return prev;
+                });
+            } else {
+                if (pageNum === 1) {
+                    setMessages(newMessages);
+                } else {
+                    setMessages(prev => [...newMessages, ...prev]);
+                }
+
+                setHasMore(!!data.next_page_url);
+                setPage(pageNum);
+            }
+
+            setLoadingMore(false);
+
+            // Update unread count in conversation list locally (only on initial fetch)
+            if (!isPolling && pageNum === 1) {
                 setConversations(prev => prev.map(c =>
                     c.id === otherUserId ? { ...c, unread_count: 0 } : c
                 ));
             }
         } catch (error) {
             console.error("Failed to fetch messages", error);
+            setLoadingMore(false);
         }
     };
 
@@ -493,9 +545,37 @@ export default function ChatIndex() {
 
                                 </div>
                             </div>
-                            <button className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300">
-                                <MoreVertical className="h-5 w-5" />
-                            </button>
+                            <div className="relative">
+                                <button
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                                    onClick={() => setShowMessageOptions(showMessageOptions === 'header' ? null : 'header')}
+                                >
+                                    <MoreVertical className="h-5 w-5" />
+                                </button>
+                                {showMessageOptions === 'header' && (
+                                    <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700 z-50 overflow-hidden">
+                                        <button
+                                            className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700 text-sm text-gray-700 dark:text-slate-200 flex items-center gap-2"
+                                            onClick={() => {
+                                                navigate(`/users/${activeChat.id}`); // Assuming generic user profile route
+                                                setShowMessageOptions(null);
+                                            }}
+                                        >
+                                            <User className="h-4 w-4" /> View Profile
+                                        </button>
+                                        <button
+                                            className="w-full text-left px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm text-red-600 dark:text-red-400 flex items-center gap-2"
+                                            onClick={() => {
+                                                // Implement delete conversation if API supports it
+                                                alert("Delete conversation logic here");
+                                                setShowMessageOptions(null);
+                                            }}
+                                        >
+                                            <Trash2 className="h-4 w-4" /> Delete Chat
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Messages */}
@@ -504,6 +584,11 @@ export default function ChatIndex() {
                             onScroll={handleScroll}
                             className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-slate-950"
                         >
+                            {loadingMore && (
+                                <div className="flex justify-center py-2">
+                                    <PageLoader message="" />
+                                </div>
+                            )}
                             {messages.map((msg, index) => {
                                 const isMe = msg.sender_id === user.id;
                                 return (
@@ -613,7 +698,7 @@ export default function ChatIndex() {
                                 </button>
                                 <input
                                     type="text"
-                                    placeholder={editingMessageId ? "Edit your message..." : "Type a message..."}
+                                    placeholder={editingMessageId ? "Edit your message..." : "Radio check..."}
                                     className="flex-1 input-field"
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}

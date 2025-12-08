@@ -7,7 +7,7 @@ export default function NotFound() {
             <div className="bg-indigo-50 text-indigo-600 rounded-full p-6 mb-6">
                 <span className="text-6xl font-bold">404</span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Page Not Found</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">No user, no! That was so not right!</h1>
             <p className="text-gray-500 max-w-md mb-8">
                 The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
             </p>

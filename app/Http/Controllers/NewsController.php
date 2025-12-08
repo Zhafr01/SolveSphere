@@ -54,6 +54,14 @@ class NewsController extends Controller
                   ->whereNull('partner_id');
         }
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('content', 'like', "%{$search}%");
+            });
+        }
+
         $news = $query->with('admin')->latest()->paginate(10);
 
         if ($request->wantsJson() && !$request->inertia()) {

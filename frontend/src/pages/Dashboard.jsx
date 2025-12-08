@@ -101,7 +101,7 @@ export default function Dashboard() {
             className="space-y-8 max-w-7xl mx-auto"
         >
             {/* Welcome Section */}
-            <motion.div variants={item} className="glass-panel p-8 rounded-2xl relative overflow-hidden">
+            <motion.div variants={item} className="glass-panel p-8 relative overflow-hidden">
                 <div className="relative z-10">
                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
                         Welcome back, <span className="text-indigo-600 dark:text-indigo-400">{user?.name}</span>!
@@ -115,11 +115,11 @@ export default function Dashboard() {
             </motion.div>
 
             {/* Stats Grid */}
-            <div className="flex flex-wrap justify-center gap-6">
+            <motion.div variants={item} className="flex flex-wrap justify-center gap-6">
                 {user?.role === 'super_admin' ? (
                     <>
-                        <Link to="/admin/verify-partners" className="min-w-[300px] flex-1 group">
-                            <Card shine className="h-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200/50 dark:border-blue-800/30 group-hover:scale-[1.02] transition-transform duration-200">
+                        <Link to="/super-admin/partners" className="min-w-[300px] flex-1 group">
+                            <Card shine gradient="from-blue-500 to-indigo-500" className="h-full border-blue-200/50 dark:border-blue-800/30">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded-xl">
                                         <Activity className="h-6 w-6" />
@@ -132,8 +132,8 @@ export default function Dashboard() {
                             </Card>
                         </Link>
 
-                        <Link to="/admin/verify-partners" className="min-w-[300px] flex-1 group">
-                            <Card shine className="h-full bg-gradient-to-br from-orange-500/20 to-red-500/20 dark:from-orange-900/20 dark:to-red-900/20 border-orange-200/50 dark:border-orange-800/30 group-hover:scale-[1.02] transition-transform duration-200">
+                        <Link to="/super-admin/partners?tab=pending" className="min-w-[300px] flex-1 group">
+                            <Card shine gradient="from-orange-500 to-red-500" className="h-full border-orange-200/50 dark:border-orange-800/30">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-orange-500/10 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 rounded-xl">
                                         <Activity className="h-6 w-6" />
@@ -146,8 +146,8 @@ export default function Dashboard() {
                             </Card>
                         </Link>
 
-                        <Link to="/users" className="min-w-[300px] flex-1 group">
-                            <Card shine className="h-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200/50 dark:border-emerald-800/30 group-hover:scale-[1.02] transition-transform duration-200">
+                        <Link to="/super-admin/users" className="min-w-[300px] flex-1 group">
+                            <Card shine gradient="from-emerald-500 to-teal-500" className="h-full border-emerald-200/50 dark:border-emerald-800/30">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl">
                                         <User className="h-6 w-6" />
@@ -163,7 +163,7 @@ export default function Dashboard() {
                 ) : user?.role === 'partner_admin' ? (
                     <>
                         <Link to={`/partners/${user.partner_slug || slug}/users`} className="min-w-[300px] flex-1 group">
-                            <Card shine className="h-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200/50 dark:border-blue-800/30 group-hover:scale-[1.02] transition-transform duration-200">
+                            <Card shine gradient="from-blue-500 to-indigo-500" className="h-full border-blue-200/50 dark:border-blue-800/30">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded-xl">
                                         <User className="h-6 w-6" />
@@ -177,7 +177,7 @@ export default function Dashboard() {
                         </Link>
 
                         <Link to={`/partners/${user.partner_slug || slug}/forum`} className="min-w-[300px] flex-1 group">
-                            <Card shine className="h-full bg-gradient-to-br from-violet-500/20 to-purple-500/20 dark:from-violet-900/20 dark:to-purple-900/20 border-violet-200/50 dark:border-violet-800/30 group-hover:scale-[1.02] transition-transform duration-200">
+                            <Card shine gradient="from-violet-500 to-purple-500" className="h-full border-violet-200/50 dark:border-violet-800/30">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-violet-500/10 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400 rounded-xl">
                                         <MessageSquare className="h-6 w-6" />
@@ -191,7 +191,7 @@ export default function Dashboard() {
                         </Link>
 
                         <Link to={`/partners/${user.partner_slug || slug}/reports`} className="min-w-[300px] flex-1 group">
-                            <Card shine className="h-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200/50 dark:border-emerald-800/30 group-hover:scale-[1.02] transition-transform duration-200">
+                            <Card shine gradient="from-emerald-500 to-teal-500" className="h-full border-emerald-200/50 dark:border-emerald-800/30">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl">
                                         <FileText className="h-6 w-6" />
@@ -207,7 +207,7 @@ export default function Dashboard() {
                 ) : (
                     <>
                         <Link to={slug ? `/partners/${slug}/reports` : '/reports'} className="min-w-[300px] flex-1 group">
-                            <Card shine className="h-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200/50 dark:border-blue-800/30 group-hover:scale-[1.02] transition-transform duration-200">
+                            <Card shine gradient="from-blue-500 to-indigo-500" className="h-full border-blue-200/50 dark:border-blue-800/30">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-blue-500/10 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded-xl">
                                         <FileText className="h-6 w-6" />
@@ -221,7 +221,7 @@ export default function Dashboard() {
                         </Link>
 
                         <Link to={slug ? `/partners/${slug}/forum` : '/forum'} className="min-w-[300px] flex-1 group">
-                            <Card shine className="h-full bg-gradient-to-br from-violet-500/20 to-purple-500/20 dark:from-violet-900/20 dark:to-purple-900/20 border-violet-200/50 dark:border-violet-800/30 group-hover:scale-[1.02] transition-transform duration-200">
+                            <Card shine gradient="from-violet-500 to-purple-500" className="h-full border-violet-200/50 dark:border-violet-800/30">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-violet-500/10 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400 rounded-xl">
                                         <MessageSquare className="h-6 w-6" />
@@ -235,7 +235,7 @@ export default function Dashboard() {
                         </Link>
 
                         <Link to={slug ? `/partners/${slug}/news` : '/news'} className="min-w-[300px] flex-1 group">
-                            <Card shine className="h-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200/50 dark:border-emerald-800/30 group-hover:scale-[1.02] transition-transform duration-200">
+                            <Card shine gradient="from-emerald-500 to-teal-500" className="h-full border-emerald-200/50 dark:border-emerald-800/30">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl">
                                         <Newspaper className="h-6 w-6" />
@@ -249,12 +249,12 @@ export default function Dashboard() {
                         </Link>
                     </>
                 )}
-            </div>
+            </motion.div>
 
             {/* Partner Rating & Admin Section */}
             {slug && (
                 ((user?.role === 'partner_admin' && currentPartner?.id === user?.partner_id) || user?.role === 'super_admin' || user?.role === 'general_user') && (
-                    <div className="glass-panel p-6 rounded-2xl mb-8">
+                    <motion.div variants={item} className="glass-panel p-6 rounded-2xl mb-8">
                         {(user?.role === 'partner_admin' && currentPartner?.id === user?.partner_id) || user?.role === 'super_admin' ? (
                             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                                 <div>
@@ -347,13 +347,13 @@ export default function Dashboard() {
                                 )}
                             </>
                         ) : null}
-                    </div>
+                    </motion.div>
                 )
             )}
 
 
             {/* Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* News Widget */}
                 <Card className="h-full">
                     <CardHeader className="flex justify-between items-center">
@@ -441,7 +441,7 @@ export default function Dashboard() {
                         )}
                     </CardContent>
                 </Card>
-            </div>
+            </motion.div>
         </motion.div >
     );
 }

@@ -1,15 +1,175 @@
-import React from 'react';
-import { Instagram, Users, Award, Code, Database, Layout, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useRef } from 'react';
+import { Instagram, Users, Award, Code, Database, Layout, Sparkles, Globe, Zap, Heart, Bookmark } from 'lucide-react';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+
+const TeamMemberCard = ({ member, position }) => {
+    const cardRef = useRef(null);
+
+    // Track scroll progress relative to this specific card
+    const { scrollYProgress } = useScroll({
+        target: cardRef,
+        // offset: Start animation when card top enters viewport bottom ('start end').
+        //         End animation FULLY when card center is at viewport center ('center center').
+        offset: ["start end", "center center"]
+    });
+
+    // Smooth out the scroll progress
+    const smoothProgress = useSpring(scrollYProgress, {
+        stiffness: 100,
+        damping: 20,
+        mass: 1
+    });
+
+    // 1. Image Animation (Pop up from behind)
+    // Starts DEEP (y: 250) and moves HIGHER (y: -160)
+    // Updated: Linear interpolation [0, 1] ensures it reaches exactly -160 at center (progress: 1)
+    const imageY = useTransform(smoothProgress, [0, 1], [250, -160]);
+    // Opacity SYNCED: Starts appearing much earlier (0.2) to match card movement
+    const imageOpacity = useTransform(smoothProgress, [0, 0.2, 1], [0, 0, 1]);
+    const imageScale = useTransform(smoothProgress, [0, 1], [0.8, 1.15]);
+
+    // 2. Card Animation (Directional Hinge + DOWNWARD Movement)
+    const cardRotateX = useTransform(smoothProgress, [0, 1], [0, 15]); // Slightly more tilt
+    const cardScale = useTransform(smoothProgress, [0, 1], [1, 0.95]); // Shrink slightly more
+
+    // MOVE DOWN: Pushes card down to separate from rising image (prevents text crash)
+    const cardMoveY = useTransform(smoothProgress, [0, 1], [0, 100]);
+
+    // Directional lateral movement (Fall back slightly to sides)
+    const xOutput = position === 'left' ? -50 : position === 'right' ? 50 : 0;
+    const cardX = useTransform(smoothProgress, [0, 1], [0, xOutput]);
+
+    // Dynamic style for the perspective container
+    const perspectiveStyle = {
+        perspective: "1200px"
+    };
+
+    // Center card elevation (moved up via negative margin)
+    const containerClasses = `relative h-[650px] flex items-center justify-center -my-10 ${position === 'center' ? '-mt-24 z-20' : ''}`;
+
+    return (
+        <div ref={cardRef} className={containerClasses} style={perspectiveStyle}>
+
+            {/* Hologram Image */}
+            {member.image ? (
+                <motion.div
+                    style={{
+                        y: imageY,
+                        opacity: imageOpacity,
+                        scale: imageScale,
+                        zIndex: 0
+                    }}
+                    className="absolute inset-x-0 bottom-[45%] flex justify-center pointer-events-none"
+                >
+                    <div className="relative w-80 h-80 flex items-end justify-center">
+                        <div className={`absolute inset-0 bg-gradient-to-t ${member.color} blur-[60px] opacity-40 rounded-full`} />
+                        <img
+                            src={member.image}
+                            alt={member.name}
+                            className="relative w-full h-full object-contain z-10"
+                            style={{ filter: 'drop-shadow(0 0 20px rgba(99,102,241,0.3))' }}
+                        />
+                    </div>
+                </motion.div>
+            ) : (
+                <motion.div
+                    style={{ y: imageY, opacity: imageOpacity }}
+                    className="absolute inset-x-0 bottom-[50%] z-0 flex justify-center pointer-events-none"
+                >
+                    <div className={`p-4 rounded-2xl bg-gradient-to-br ${member.color} shadow-lg shadow-offset overflow-hidden h-24 w-24 flex items-center justify-center`}>
+                        <div className="absolute inset-0 bg-white opacity-20 rounded-2xl animate-pulse"></div>
+                        {member.icon}
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Main Card */}
+            <motion.div
+                style={{
+                    rotateX: cardRotateX,
+                    x: cardX,
+                    y: cardMoveY, // Applied downward movement
+                    scale: cardScale,
+                    zIndex: 10,
+                    transformOrigin: "top",
+                    transformStyle: "preserve-3d"
+                }}
+                className="relative bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl border border-white/50 dark:border-slate-700/50 p-8 flex flex-col items-center text-center shadow-2xl w-full max-w-sm"
+            >
+                {/* Background Ambient Glow */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${member.color} rounded-3xl blur-2xl opacity-5 -z-10`} />
+
+                {/* Top Header */}
+                <div className="mb-6 w-full flex items-center justify-center gap-3 opacity-50">
+                    <div className="h-px bg-slate-300 dark:bg-slate-600 flex-1"></div>
+                    <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">
+                        Developer Profile
+                    </span>
+                    <div className="h-px bg-slate-300 dark:bg-slate-600 flex-1"></div>
+                </div>
+
+                {/* Role Badge */}
+                <div className={`mb-4 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600`}>
+                    {member.role}
+                </div>
+
+                {/* Name & NIM */}
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+                    {member.name}
+                </h3>
+                <p className="text-sm font-mono text-slate-500 dark:text-slate-400 mb-6 bg-slate-100 dark:bg-slate-900/50 px-3 py-1 rounded-md">
+                    NIM: {member.nim}
+                </p>
+
+                {/* Extended Description */}
+                <p className="text-slate-600 dark:text-slate-400 mb-6 text-sm leading-relaxed">
+                    {member.description}
+                </p>
+
+                {/* Skills - New Content */}
+                <div className="flex flex-wrap justify-center gap-2 mb-6">
+                    {member.skills.map((skill, i) => (
+                        <span key={i} className="px-2 py-1 text-[10px] font-semibold bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 rounded-md border border-slate-200 dark:border-slate-600">
+                            {skill}
+                        </span>
+                    ))}
+                </div>
+
+                {/* Responsibility */}
+                <div className="w-full pt-6 border-t border-slate-200/60 dark:border-slate-700/60 mb-6">
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 italic">
+                        "{member.responsibility}"
+                    </p>
+                </div>
+
+                {/* Social Link */}
+                <motion.a
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    href={`https://instagram.com/${member.username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`w-full py-3 rounded-xl bg-gradient-to-r ${member.color} text-white font-medium shadow-lg hover:shadow-xl hover:opacity-90 transition-all flex items-center justify-center gap-2`}
+                >
+                    <Instagram className="h-5 w-5" />
+                    <span>@{member.username}</span>
+                </motion.a>
+            </motion.div>
+        </div>
+    );
+};
 
 export default function AboutUs() {
-    const team = [
+    const rawTeam = [
         {
             name: "Muhammad Zhafier Ardine Yudhistira",
             nim: "240533608306",
             username: "zhaf_ard",
             role: "Ketua",
             responsibility: "Fullstack Developer & System Architect",
+            description: "Responsible for the entire system architecture, backend development with Laravel, and seamless integration of various APIs. Passionate about scalable code and clean design patterns.",
+            skills: ["Laravel", "React", "System Architecture", "DevOps"],
+            image: "/images/zhafier.png",
             icon: <Database className="h-6 w-6 text-white" />,
             color: "from-indigo-500 to-purple-500",
             shadow: "shadow-indigo-500/20"
@@ -20,6 +180,9 @@ export default function AboutUs() {
             username: "swykheprnma",
             role: "Anggota",
             responsibility: "Frontend & UI/UX Designer",
+            description: "Crafting beautiful and intuitive user interfaces. Focuses on user experience, responsive design, and implementing modern visual effects to make the platform come alive.",
+            skills: ["Figma", "React", "Tailwind CSS", "Animation"],
+            image: "/images/swyhke.png",
             icon: <Layout className="h-6 w-6 text-white" />,
             color: "from-pink-500 to-rose-500",
             shadow: "shadow-pink-500/20"
@@ -30,58 +193,28 @@ export default function AboutUs() {
             username: "revalyaaaa",
             role: "Anggota",
             responsibility: "Frontend Specialist & Documentation",
+            description: "Ensures code quality and thorough documentation. Specializes in React component optimization and maintaining a consistent design system across the application.",
+            skills: ["React", "Documentation", "QA Testing", "CSS"],
+            image: "/images/reva.png",
             icon: <Code className="h-6 w-6 text-white" />,
             color: "from-emerald-500 to-teal-500",
             shadow: "shadow-emerald-500/20"
         }
     ];
 
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.2
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { y: 50, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: {
-                type: "spring",
-                stiffness: 100
-            }
-        }
-    };
+    // Reorder: [Left, Center, Right] -> [Member, Leader, Member]
+    // Current Raw: [Leader, Member1, Member2]
+    // Goal: [Member1, Leader, Member2]
+    const team = [rawTeam[1], rawTeam[0], rawTeam[2]];
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-slate-50 dark:bg-slate-900">
-            {/* Animated Background Elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <motion.div
-                    animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="absolute -top-40 -right-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl opacity-50 dark:opacity-20"
-                />
-                <motion.div
-                    animate={{ rotate: -360, scale: [1, 1.3, 1] }}
-                    transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                    className="absolute top-40 -left-20 w-72 h-72 bg-indigo-500/20 rounded-full blur-3xl opacity-50 dark:opacity-20"
-                />
-                <motion.div
-                    animate={{ y: [0, -50, 0] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute bottom-0 right-1/4 w-80 h-80 bg-pink-500/20 rounded-full blur-3xl opacity-30 dark:opacity-10"
-                />
-            </div>
+        <div className="min-h-screen relative overflow-hidden bg-slate-50 dark:bg-slate-950">
+            {/* Background elements */}
+            <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-indigo-50/50 to-transparent dark:from-indigo-950/30 pointer-events-none" />
 
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
                 {/* Header Section */}
-                <div className="text-center mb-20 space-y-6">
+                <div className="text-center mb-24 space-y-6">
                     <motion.div
                         initial={{ opacity: 0, scale: 0 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -115,73 +248,53 @@ export default function AboutUs() {
                     </motion.p>
                 </div>
 
-                {/* Cards Grid */}
+                {/* Project Purpose (New Section) */}
                 <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                    className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8 }}
+                    className="mb-32 max-w-4xl mx-auto"
                 >
-                    {team.map((member, index) => (
-                        <motion.div
-                            key={index}
-                            variants={itemVariants}
-                            whileHover={{ y: -10 }}
-                            className="group relative"
-                        >
-                            <div className={`absolute inset-0 bg-gradient-to-br ${member.color} rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-300 -z-10`} />
+                    <div className="relative p-1 rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-2xl">
+                        <div className="bg-white dark:bg-slate-900 rounded-[22px] p-8 md:p-12 text-center relative overflow-hidden">
+                            {/* Decorative blur */}
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-indigo-500/20 blur-[80px] rounded-full pointer-events-none" />
 
-                            <div className="relative h-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/50 dark:border-slate-700/50 p-8 flex flex-col items-center text-center shadow-lg hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300">
-
-                                {/* Icon/Avatar */}
-                                <div className={`relative mb-6 p-4 rounded-2xl bg-gradient-to-br ${member.color} shadow-lg shadow-offset`}>
-                                    <div className="absolute inset-0 bg-white opacity-20 rounded-2xl animate-pulse"></div>
-                                    {member.icon}
+                            <div className="relative z-10 flex flex-col items-center">
+                                <div className="h-12 w-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mb-6 text-indigo-600 dark:text-indigo-400">
+                                    <Bookmark className="h-6 w-6" />
                                 </div>
-
-                                {/* Role Badge */}
-                                <div className={`mb-4 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600`}>
-                                    {member.role}
-                                </div>
-
-                                {/* Name & NIM */}
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                                    {member.name}
-                                </h3>
-                                <p className="text-sm font-mono text-slate-500 dark:text-slate-400 mb-6 bg-slate-100 dark:bg-slate-900/50 px-3 py-1 rounded-md">
-                                    NIM: {member.nim}
+                                <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 mb-6">
+                                    Final Project: Pemrograman Web
+                                </h2>
+                                <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl">
+                                    Project ini diajukan sebagai bentuk pemenuhan <span className="font-bold text-indigo-600 dark:text-indigo-400">Tugas Akhir</span> pada mata kuliah <span className="font-semibold text-slate-900 dark:text-white">Pemrograman Web</span>. Dikembangkan dengan teknologi modern seperti React, Laravel, dan TailwindCSS untuk mendemonstrasikan pemahaman mendalam tentang pengembangan aplikasi web fullstack.
                                 </p>
-
-                                {/* Responsibility */}
-                                <div className="mt-auto w-full pt-6 border-t border-slate-200/60 dark:border-slate-700/60">
-                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 italic">
-                                        "{member.responsibility}"
-                                    </p>
-                                </div>
-
-                                {/* Social Link */}
-                                <motion.a
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    href={`https://instagram.com/${member.username}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`mt-6 w-full py-2.5 rounded-xl bg-gradient-to-r ${member.color} text-white font-medium shadow-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2`}
-                                >
-                                    <Instagram className="h-4 w-4" />
-                                    <span>@{member.username}</span>
-                                </motion.a>
                             </div>
-                        </motion.div>
-                    ))}
+                        </div>
+                    </div>
                 </motion.div>
+
+                {/* Team Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-y-24 gap-x-8 mb-40 items-start">
+                    {team.map((member, index) => {
+                        // Determine position based on index in the reordered array
+                        // 0: Left, 1: Center, 2: Right
+                        const position = index === 0 ? 'left' : index === 1 ? 'center' : 'right';
+
+                        return (
+                            <TeamMemberCard key={index} member={member} position={position} />
+                        );
+                    })}
+                </div>
 
                 {/* Bottom Decorative Footer */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    className="mt-24 text-center"
+                    className="text-center pb-20"
                 >
                     <p className="text-sm text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2">
                         Made with <span className="text-red-500 animate-pulse">❤</span> by Kelompok 10

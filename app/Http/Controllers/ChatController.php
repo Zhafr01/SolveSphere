@@ -182,15 +182,17 @@ class ChatController extends Controller
         //     return response()->json(['message' => 'You can only chat with friends or users from your organization.'], 403);
         // }
 
-        $messages = Message::where(function ($query) use ($userId, $otherUser) {
-            $query->where('sender_id', $userId)
-                ->where('receiver_id', $otherUser->id);
-        })->orWhere(function ($query) use ($userId, $otherUser) {
-            $query->where('sender_id', $otherUser->id)
-                ->where('receiver_id', $userId);
+        $messages = Message::where(function($q) use ($userId, $otherUser) {
+            $q->where(function ($query) use ($userId, $otherUser) {
+                $query->where('sender_id', $userId)
+                    ->where('receiver_id', $otherUser->id);
+            })->orWhere(function ($query) use ($userId, $otherUser) {
+                $query->where('sender_id', $otherUser->id)
+                    ->where('receiver_id', $userId);
+            });
         })
-        ->orderBy('created_at', 'asc')
-        ->get();
+        ->orderBy('id', 'desc')
+        ->paginate(20);
 
         // Mark messages as read
         Message::where('sender_id', $otherUser->id)

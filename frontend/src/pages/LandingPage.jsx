@@ -66,7 +66,7 @@ export default function LandingPage() {
                             SolveSphere
                         </h1>
                         <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto mb-10 font-light">
-                            A simply lovely way to build and engage with your community.
+                            Solving problems? Simply lovely.
                         </p>
 
                         <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -82,22 +82,11 @@ export default function LandingPage() {
                         </div>
                     </motion.div>
                 </div>
-
-                {/* Decorative Background Elements */}
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
-                    <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-200 dark:bg-purple-900/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-30 animate-blob"></div>
-                    <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-indigo-200 dark:bg-indigo-900/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-                    <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-pink-200 dark:bg-pink-900/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
-                </div>
             </section>
 
             {/* About Section */}
             <section className="py-24 relative overflow-hidden">
-                {/* Section Background */}
-                <div className="absolute inset-0 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px]"></div>
-                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px]"></div>
-                </div>
+
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     <div className="text-center max-w-3xl mx-auto">
@@ -207,7 +196,7 @@ export default function LandingPage() {
                                         transition={{ duration: 0.5, delay: index * 0.1 }}
                                     >
                                         <Link to={`/partners/${partner.slug}`} className="block h-full">
-                                            <Card className="h-full hover:shadow-xl transition-all duration-300 border-none overflow-hidden group glass-card relative flex flex-col">
+                                            <Card className="h-full p-0 hover:shadow-xl transition-all duration-300 border-none overflow-hidden group glass-card relative flex flex-col">
                                                 {/* Banner */}
                                                 <div className="h-48 w-full bg-slate-200 dark:bg-slate-700 relative overflow-hidden">
                                                     {partner.banner ? (

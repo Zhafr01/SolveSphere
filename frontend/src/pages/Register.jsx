@@ -27,7 +27,11 @@ export default function Register() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            {error && <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium">{error}</div>}
+            {error && (
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium backdrop-blur-sm animate-in fade-in slide-in-from-top-2">
+                    {error}
+                </div>
+            )}
 
             <div>
                 <label className="block text-slate-700 text-sm font-semibold mb-2" htmlFor="name">
@@ -112,7 +116,7 @@ export default function Register() {
                     type="submit"
                     className="btn-primary w-full flex justify-center"
                 >
-                    Create Account
+                    Join the Grid
                 </button>
             </div>
 
